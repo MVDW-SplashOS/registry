@@ -1,9 +1,14 @@
-# registry
-A system to centralize configuration files like a registry
+# 🗂️ Registry
 
-## Development
+A centralized system for managing configuration files across a Linux system, similar to a registry.
 
-To install the components for development:
+> [!WARNING]
+> **Early Development:** The registry and its definitions are still in active development.
+> Breaking changes (including definition format changes) may occur without notice.
+
+## 🚀 Development Setup
+
+Follow these steps to set up your local development environment:
 
 1. Clone the repository:
 ```bash
