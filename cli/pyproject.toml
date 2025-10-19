@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "registry"
+version = "0.1.0"
+description = "A cli tool to manage system configuration like a registry"
+authors = [
+    {name = "MVDW-Java"},
+]
+requires-python = ">=3.6"
+dependencies = [
+    "libregistry>=0.1.0"
+]
+readme = "README.md"
+license = {text = "GPL-3.0-or-later"}
+
+[project.scripts]
+registry = "registry.main:main"

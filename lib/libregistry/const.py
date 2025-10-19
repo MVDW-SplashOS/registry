@@ -1,0 +1,2 @@
+DIRECTORY_BASE = "/etc/registry"
+DIRECTORY_DEFINITION = DIRECTORY_BASE + "/definitions"

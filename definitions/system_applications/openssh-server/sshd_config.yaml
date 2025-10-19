@@ -1,0 +1,738 @@
+file:
+    location: /etc/ssh/sshd_config
+    format: key_value
+    encoding: utf-8
+    permissions: "0600"
+    owner: root
+    group: root
+
+structures:
+    main:
+        mutually_exclusive:
+            - [ChallengeResponseAuthentication, KbdInteractiveAuthentication]
+
+        dependencies:
+            AuthorizedKeysCommand:
+                requires: [AuthorizedKeysCommandUser]
+            AuthorizedPrincipalsCommand:
+                requires: [AuthorizedPrincipalsCommandUser]
+            ChrootDirectory:
+                incompatible_with: [PermitTTY]
+        options:
+            AcceptEnv:
+                type: string_list
+                default: []
+                description: Environment variables to accept from client
+
+            AddressFamily:
+                type: enum
+                default: any
+                values: [any, inet, inet6]
+                description: Address family to use
+
+            AllowAgentForwarding:
+                type: boolean
+                default: yes
+                description: Allow ssh-agent forwarding
+
+            AllowGroups:
+                type: string_list
+                default: []
+                description: Only allow users in these groups (empty = all allowed)
+
+            AllowStreamLocalForwarding:
+                type: enum
+                default: yes
+                values: [yes, no, all, local, remote]
+                description: Allow Unix domain socket forwarding
+
+            AllowTcpForwarding:
+                type: enum
+                default: yes
+                values: [yes, no, all, local, remote]
+                description: Allow TCP forwarding
+
+            AllowUsers:
+                type: string_list
+                default: []
+                description: Only allow these users (empty = all allowed)
+
+            AuthenticationMethods:
+                type: string_list
+                default: any
+                description: Required authentication methods
+
+            AuthorizedKeysCommand:
+                type: string
+                default: none
+                description: Command to retrieve authorized keys
+
+            AuthorizedKeysCommandUser:
+                type: string
+                default: none
+                description: User to run AuthorizedKeysCommand as
+
+            AuthorizedKeysFile:
+                type: string_list
+                default: [".ssh/authorized_keys", ".ssh/authorized_keys2"]
+                description: Files containing authorized keys
+
+            AuthorizedPrincipalsCommand:
+                type: string
+                default: none
+                description: Command to retrieve authorized principals
+
+            AuthorizedPrincipalsCommandUser:
+                type: string
+                default: none
+                description: User to run AuthorizedPrincipalsCommand as
+
+            AuthorizedPrincipalsFile:
+                type: string
+                default: none
+                description: File containing authorized principals
+
+            Banner:
+                type: string
+                default: none
+                description: Banner file to display before authentication
+
+            CASignatureAlgorithms:
+                type: string_list
+                default:
+                    [
+                        "ssh-ed25519",
+                        "ecdsa-sha2-nistp256",
+                        "ecdsa-sha2-nistp384",
+                        "ecdsa-sha2-nistp521",
+                        "sk-ssh-ed25519@openssh.com",
+                        "sk-ecdsa-sha2-nistp256@openssh.com",
+                        "rsa-sha2-512",
+                        "rsa-sha2-256",
+                    ]
+                description: CA signature algorithms to accept
+
+            ChallengeResponseAuthentication:
+                type: boolean
+                default: yes
+                description: Enable challenge-response authentication
+
+            ChannelTimeout:
+                type: string_list
+                default: []
+                description: Timeout settings for channel types
+
+            ChrootDirectory:
+                type: string
+                default: none
+                description: Directory to chroot to after authentication
+
+            Ciphers:
+                type: string_list
+                default:
+                    [
+                        "chacha20-poly1305@openssh.com",
+                        "aes128-ctr",
+                        "aes192-ctr",
+                        "aes256-ctr",
+                        "aes128-gcm@openssh.com",
+                        "aes256-gcm@openssh.com",
+                    ]
+                description: Allowed symmetric ciphers
+
+            ClientAliveCountMax:
+                type: integer
+                default: 3
+                description: Max client alive messages without response
+
+            ClientAliveInterval:
+                type: integer
+                default: 0
+                description: Seconds between client alive messages (0 = disabled)
+
+            Compression:
+                type: enum
+                default: yes
+                values: [yes, no, delayed]
+                description: Enable compression
+
+            DenyGroups:
+                type: string_list
+                default: []
+                description: Deny access to users in these groups
+
+            DenyUsers:
+                type: string_list
+                default: []
+                description: Deny access to these users
+
+            DisableForwarding:
+                type: boolean
+                default: no
+                description: Disable all forwarding features
+
+            ExposeAuthInfo:
+                type: boolean
+                default: no
+                description: Write authentication info to temporary file
+
+            FingerprintHash:
+                type: enum
+                default: sha256
+                values: [md5, sha256]
+                description: Hash algorithm for key fingerprints
+
+            ForceCommand:
+                type: string
+                default: none
+                description: Force execution of this command
+
+            GatewayPorts:
+                type: enum
+                default: no
+                values: [yes, no, clientspecified]
+                description: Allow remote hosts to connect to forwarded ports
+
+            GSSAPIAuthentication:
+                type: boolean
+                default: no
+                description: Enable GSSAPI authentication
+
+            GSSAPICleanupCredentials:
+                type: boolean
+                default: yes
+                description: Destroy credentials cache on logout
+
+            GSSAPIStrictAcceptorCheck:
+                type: boolean
+                default: yes
+                description: Strict GSSAPI acceptor hostname check
+
+            HostbasedAcceptedAlgorithms:
+                type: string_list
+                default:
+                    [
+                        "ssh-ed25519-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp384-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp521-cert-v01@openssh.com",
+                        "sk-ssh-ed25519-cert-v01@openssh.com",
+                        "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com",
+                        "rsa-sha2-512-cert-v01@openssh.com",
+                        "rsa-sha2-256-cert-v01@openssh.com",
+                        "ssh-ed25519",
+                        "ecdsa-sha2-nistp256",
+                        "ecdsa-sha2-nistp384",
+                        "ecdsa-sha2-nistp521",
+                        "sk-ssh-ed25519@openssh.com",
+                        "sk-ecdsa-sha2-nistp256@openssh.com",
+                        "rsa-sha2-512",
+                        "rsa-sha2-256",
+                    ]
+                description: Host-based authentication algorithms
+
+            HostbasedAuthentication:
+                type: boolean
+                default: no
+                description: Enable host-based authentication
+
+            HostbasedUsesNameFromPacketOnly:
+                type: boolean
+                default: no
+                description: Use client-supplied name for host-based auth
+
+            HostCertificate:
+                type: string
+                default: none
+                description: Host certificate file
+
+            HostKey:
+                type: string_list
+                default:
+                    [
+                        "/etc/ssh/ssh_host_ecdsa_key",
+                        "/etc/ssh/ssh_host_ed25519_key",
+                        "/etc/ssh/ssh_host_rsa_key",
+                    ]
+                description: Host private key files
+
+            HostKeyAgent:
+                type: string
+                default: none
+                description: SSH agent socket for host keys
+
+            HostKeyAlgorithms:
+                type: string_list
+                default:
+                    [
+                        "ssh-ed25519-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp384-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp521-cert-v01@openssh.com",
+                        "sk-ssh-ed25519-cert-v01@openssh.com",
+                        "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com",
+                        "rsa-sha2-512-cert-v01@openssh.com",
+                        "rsa-sha2-256-cert-v01@openssh.com",
+                        "ssh-ed25519",
+                        "ecdsa-sha2-nistp256",
+                        "ecdsa-sha2-nistp384",
+                        "ecdsa-sha2-nistp521",
+                        "sk-ssh-ed25519@openssh.com",
+                        "sk-ecdsa-sha2-nistp256@openssh.com",
+                        "rsa-sha2-512",
+                        "rsa-sha2-256",
+                    ]
+                description: Host key algorithms to offer
+
+            IgnoreRhosts:
+                type: boolean
+                default: yes
+                description: Ignore .rhosts and .shosts files
+
+            IgnoreUserKnownHosts:
+                type: boolean
+                default: no
+                description: Ignore user's known_hosts file
+
+            Include:
+                type: string_list
+                default: []
+                description: Include additional config files
+
+            IPQoS:
+                type: string
+                default: "lowdelay throughput"
+                description: IP QoS class for interactive and non-interactive sessions
+
+            KbdInteractiveAuthentication:
+                type: boolean
+                default: yes
+                description: Enable keyboard-interactive authentication
+
+            KerberosAuthentication:
+                type: boolean
+                default: no
+                description: Enable Kerberos authentication
+
+            KerberosGetAFSToken:
+                type: boolean
+                default: no
+                description: Get AFS token after Kerberos authentication
+
+            KerberosOrLocalPasswd:
+                type: boolean
+                default: yes
+                description: Try local password if Kerberos fails
+
+            KerberosTicketCleanup:
+                type: boolean
+                default: yes
+                description: Destroy ticket cache on logout
+
+            KexAlgorithms:
+                type: string_list
+                default:
+                    [
+                        "sntrup761x25519-sha512@openssh.com",
+                        "curve25519-sha256",
+                        "curve25519-sha256@libssh.org",
+                        "ecdh-sha2-nistp256",
+                        "ecdh-sha2-nistp384",
+                        "ecdh-sha2-nistp521",
+                        "diffie-hellman-group-exchange-sha256",
+                        "diffie-hellman-group16-sha512",
+                        "diffie-hellman-group18-sha512",
+                        "diffie-hellman-group14-sha256",
+                    ]
+                description: Key exchange algorithms
+
+            ListenAddress:
+                type: string_list
+                default: ["0.0.0.0", "::"]
+                description: Addresses to listen on
+
+            LoginGraceTime:
+                type: integer
+                default: 120
+                description: Seconds before unauthenticated connection is disconnected
+
+            LogLevel:
+                type: enum
+                default: INFO
+                values:
+                    [
+                        QUIET,
+                        FATAL,
+                        ERROR,
+                        INFO,
+                        VERBOSE,
+                        DEBUG,
+                        DEBUG1,
+                        DEBUG2,
+                        DEBUG3,
+                    ]
+                description: Logging verbosity level
+
+            MACs:
+                type: string_list
+                default:
+                    [
+                        "umac-64-etm@openssh.com",
+                        "umac-128-etm@openssh.com",
+                        "hmac-sha2-256-etm@openssh.com",
+                        "hmac-sha2-512-etm@openssh.com",
+                        "hmac-sha1-etm@openssh.com",
+                        "umac-64@openssh.com",
+                        "umac-128@openssh.com",
+                        "hmac-sha2-256",
+                        "hmac-sha2-512",
+                        "hmac-sha1",
+                    ]
+                description: Message authentication code algorithms
+
+            MaxAuthTries:
+                type: integer
+                default: 6
+                description: Maximum authentication attempts per connection
+
+            MaxSessions:
+                type: integer
+                default: 10
+                description: Maximum concurrent sessions per connection
+
+            MaxStartups:
+                type: string
+                default: "10:30:100"
+                description: Max concurrent unauthenticated connections
+
+            PasswordAuthentication:
+                type: boolean
+                default: yes
+                description: Enable password authentication
+
+            PermitEmptyPasswords:
+                type: boolean
+                default: no
+                description: Allow login with empty passwords
+
+            PermitListen:
+                type: string_list
+                default: []
+                description: Forwarding destinations to permit (empty = all)
+
+            PermitOpen:
+                type: string_list
+                default: []
+                description: TCP forwarding destinations to permit (empty = all)
+
+            PermitRootLogin:
+                type: enum
+                default: prohibit-password
+                values:
+                    [
+                        yes,
+                        no,
+                        prohibit-password,
+                        forced-commands-only,
+                        without-password,
+                    ]
+                description: Allow root login
+
+            PermitTTY:
+                type: boolean
+                default: yes
+                description: Allow PTY allocation
+
+            PermitTunnel:
+                type: enum
+                default: no
+                values: [yes, no, point-to-point, ethernet]
+                description: Allow tun device forwarding
+
+            PermitUserEnvironment:
+                type: boolean
+                default: no
+                description: Allow ~/.ssh/environment processing
+
+            PermitUserRC:
+                type: boolean
+                default: yes
+                description: Allow ~/.ssh/rc execution
+
+            PerSourceMaxStartups:
+                type: string
+                default: none
+                description: Max unauthenticated connections per source
+
+            PerSourceNetBlockSize:
+                type: string
+                default: "32:128"
+                description: CIDR blocks for IPv4:IPv6 rate limiting
+
+            PidFile:
+                type: string
+                default: /var/run/sshd.pid
+                description: PID file location
+
+            Port:
+                type: integer
+                default: 22
+                description: Port to listen on
+
+            PrintLastLog:
+                type: boolean
+                default: yes
+                description: Print last login time
+
+            PrintMotd:
+                type: boolean
+                default: yes
+                description: Print message of the day
+
+            Protocol:
+                type: integer
+                default: 2
+                description: SSH protocol version (deprecated, always 2)
+
+            PubkeyAcceptedAlgorithms:
+                type: string_list
+                default:
+                    [
+                        "ssh-ed25519-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp256-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp384-cert-v01@openssh.com",
+                        "ecdsa-sha2-nistp521-cert-v01@openssh.com",
+                        "sk-ssh-ed25519-cert-v01@openssh.com",
+                        "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com",
+                        "rsa-sha2-512-cert-v01@openssh.com",
+                        "rsa-sha2-256-cert-v01@openssh.com",
+                        "ssh-ed25519",
+                        "ecdsa-sha2-nistp256",
+                        "ecdsa-sha2-nistp384",
+                        "ecdsa-sha2-nistp521",
+                        "sk-ssh-ed25519@openssh.com",
+                        "sk-ecdsa-sha2-nistp256@openssh.com",
+                        "rsa-sha2-512",
+                        "rsa-sha2-256",
+                    ]
+                description: Public key signature algorithms
+
+            PubkeyAuthentication:
+                type: boolean
+                default: yes
+                description: Enable public key authentication
+
+            PubkeyAuthOptions:
+                type: string_list
+                default: []
+                description: Public key authentication options
+
+            RekeyLimit:
+                type: string
+                default: "default none"
+                description: Data/time limits for rekeying
+
+            RevokedKeys:
+                type: string
+                default: none
+                description: File containing revoked public keys
+
+            SecurityKeyProvider:
+                type: string
+                default: internal
+                description: FIDO security key middleware library path
+
+            SetEnv:
+                type: string_list
+                default: []
+                description: Environment variables to set
+
+            StreamLocalBindMask:
+                type: string
+                default: "0177"
+                description: Octal umask for Unix domain socket forwarding
+
+            StreamLocalBindUnlink:
+                type: boolean
+                default: no
+                description: Remove existing Unix domain sockets before binding
+
+            StrictModes:
+                type: boolean
+                default: yes
+                description: Check file permissions before accepting login
+
+            Subsystem:
+                type: string_map
+                default: { "sftp": "/usr/lib/openssh/sftp-server" }
+                description: External subsystem definitions
+
+            SyslogFacility:
+                type: enum
+                default: AUTH
+                values:
+                    [
+                        DAEMON,
+                        USER,
+                        AUTH,
+                        LOCAL0,
+                        LOCAL1,
+                        LOCAL2,
+                        LOCAL3,
+                        LOCAL4,
+                        LOCAL5,
+                        LOCAL6,
+                        LOCAL7,
+                    ]
+                description: Syslog facility code
+
+            TCPKeepAlive:
+                type: boolean
+                default: yes
+                description: Send TCP keepalive messages
+
+            TrustedUserCAKeys:
+                type: string
+                default: none
+                description: CA public keys trusted for user certificates
+
+            UnusedConnectionTimeout:
+                type: string
+                default: none
+                description: Timeout for sessions with no open channels
+
+            UseDNS:
+                type: boolean
+                default: no
+                description: Lookup remote hostname for authentication checks
+
+            UsePAM:
+                type: boolean
+                default: no
+                description: Enable PAM authentication
+
+            VersionAddendum:
+                type: string
+                default: none
+                description: Additional text to append to SSH version
+
+            X11DisplayOffset:
+                type: integer
+                default: 10
+                description: First display number for X11 forwarding
+
+            X11Forwarding:
+                type: boolean
+                default: no
+                description: Enable X11 forwarding
+
+            X11UseLocalhost:
+                type: boolean
+                default: yes
+                description: Bind X11 forwarding to loopback address
+
+            XAuthLocation:
+                type: string
+                default: /usr/bin/xauth
+                description: Path to xauth program
+    match_block:
+        type: conditional_section
+        criteria:
+            User:
+                type: pattern
+                description: Username or pattern
+            Group:
+                type: pattern
+                description: Group name or pattern
+            Host:
+                type: pattern
+                description: Hostname or pattern
+            Address:
+                type: cidr_pattern
+                description: IP address or CIDR block
+            LocalAddress:
+                type: ip_address
+                description: Local bind address
+            LocalPort:
+                type: integer
+                description: Local port number
+            RDomain:
+                type: string
+                description: Routing domain
+            All:
+                type: boolean
+                description: Match all (context reset)
+        inherited_structure: main
+        prohibited_structure_options:
+            - Port
+            - ListenAddress
+            - HostKey
+parsing:
+    directive_format:
+        simple: "key value"
+        multi_value: "key val1 val2"
+        subsystem: "key name command"
+
+    multi_occurrence:
+        allowed:
+            - Port
+            - ListenAddress
+            - HostKey
+            - AcceptEnv
+        behavior: append
+
+    ordering:
+        significant_for:
+            - Match
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: true
+    delimiter: " "
+    quote_values: false
+    duplicate_key_behavior:
+        default: last_wins
+        exceptions:
+            - structure: main
+              options:
+                  Port: append
+                  ListenAddress: append
+                  HostKey: append
+                  AcceptEnv: append
+    blocks:
+        - name: Match
+          type: conditional
+          start_pattern: "^Match\\s+"
+          end_pattern: null
+          nesting: false
+          ordering_significant: true
+
+relationships:
+
+validation:
+    rules:
+        - name: root_login_security
+          when: PermitRootLogin == "yes"
+          message: "Allowing root login with password is insecure"
+
+        - name: empty_password_security
+          when: PermitEmptyPasswords == "yes"
+          message: "Empty passwords are a critical security risk"
+
+        - name: deprecated_protocol
+          option: Protocol
+
+          message: "Protocol directive is deprecated since OpenSSH 7.4"
+    deprecated:
+        - structure: main
+          option: Protocol
+          since_version: "7.4"
+          replacement: null
+          message: "Protocol 2 is now the only supported protocol"
+
+        - structure: main
+          option: RhostsRSAAuthentication
+          since_version: "7.4"
+          replacement: null
+          message: "Removed in OpenSSH 7.4"

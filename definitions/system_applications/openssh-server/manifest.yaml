@@ -1,0 +1,13 @@
+manifest_scheme_revision: 1
+application:
+    name: openssh-server
+    version: 10.1
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    sshd_config: sshd_config.yaml
+
+detect_installed:
+    - /usr/sbin/sshd
+    - /etc/ssh/sshd_config
