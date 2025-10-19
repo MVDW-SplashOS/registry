@@ -12,8 +12,7 @@ git clone https://github.com/MVDW-SplashOS/registry.git && cd registry
 
 2. Install development dependencies:
 ```bash
-pip install -e lib/
-pip install -e cli/
+pip install -e lib/ && pip install -e cli/
 ```
 3. Install definitions
 ```bash
