@@ -12,11 +12,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "cli"))
 
 def create_cli_mock(tmp_path):
     """Create a CLI instance with mocked dependencies."""
-    with patch('registry.main.RegistrySession') as mock_session:
+    from registry.main import RegistryCLI
+    with patch('libregistry.api.RegistrySession') as mock_session:
         mock_session.return_value.main_definition = {"categories": [], "packages": {}}
         mock_session.return_value.categories = {}
-
-        from registry.main import RegistryCLI
         with patch.object(RegistryCLI, '_ensure_directories'):
             cli = RegistryCLI(verbose=False)
             cli.changes_file = tmp_path / "changes.yaml"
