@@ -1,0 +1,86 @@
+file:
+    location: /etc/logrotate.conf
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            rotate:
+                type: integer
+                default: 4
+                description: Number of rotated log files to keep
+
+            daily:
+                type: boolean
+                default: false
+                description: Rotate logs daily
+
+            weekly:
+                type: boolean
+                default: true
+                description: Rotate logs weekly
+
+            monthly:
+                type: boolean
+                default: false
+                description: Rotate logs monthly
+
+            yearly:
+                type: boolean
+                default: false
+                description: Rotate logs yearly
+
+            missingok:
+                type: boolean
+                default: false
+                description: Don't error if log file is missing
+
+            notifempty:
+                type: boolean
+                default: false
+                description: Don't rotate if log is empty
+
+            compress:
+                type: boolean
+                default: true
+                description: Compress rotated logs
+
+            delaycompress:
+                type: boolean
+                default: false
+                description: Delay compression until next rotation
+
+            create:
+                type: string
+                default: "0644 root utmp"
+                description: Create new log file with these permissions
+
+            dateext:
+                type: boolean
+                default: false
+                description: Use date as extension
+
+            dateformat:
+                type: string
+                default: "-%Y%m%d"
+                description: Date format for ext
+
+            maxage:
+                type: integer
+                default: 0
+                description: Remove logs older than this many days
+
+            size:
+                type: string
+                default: ""
+                description: Rotate when file exceeds this size

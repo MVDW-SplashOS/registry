@@ -4,6 +4,7 @@ import argparse
 import tempfile
 import shutil
 import subprocess
+import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
@@ -642,6 +643,252 @@ class RegistryCLI:
         else:
             print(f"All {valid_count} change(s) validated successfully")
 
+    def list_command(self, category: str = None, detected_only: bool = False):
+        """List available packages"""
+        try:
+            main_def = get_main_definition()
+            definitions_dir = Path("/etc/registry/definitions")
+
+            if not definitions_dir.exists():
+                definitions_dir = PROJECT_ROOT / "definitions"
+
+            categories = []
+            packages = {}
+
+            if definitions_dir.exists():
+                for cat_dir in sorted(definitions_dir.iterdir()):
+                    if cat_dir.is_dir() and not cat_dir.name.startswith("."):
+                        if category and cat_dir.name != category:
+                            continue
+
+                        cat_packages = []
+                        for pkg_dir in sorted(cat_dir.iterdir()):
+                            if pkg_dir.is_dir() and (pkg_dir / "manifest.yaml").exists():
+                                manifest_path = pkg_dir / "manifest.yaml"
+                                with open(manifest_path) as f:
+                                    manifest = yaml.safe_load(f)
+
+                                pkg_info = {
+                                    "name": pkg_dir.name,
+                                    "version": manifest.get("application", {}).get("version", "unknown"),
+                                    "detected": False,
+                                }
+
+                                if not detected_only:
+                                    cat_packages.append(pkg_info)
+                                else:
+                                    detect_paths = manifest.get("detect_installed", [])
+                                    is_installed = any(Path(p).exists() for p in detect_paths)
+                                    if is_installed:
+                                        pkg_info["detected"] = True
+                                        cat_packages.append(pkg_info)
+
+                        if cat_packages:
+                            categories.append(cat_dir.name)
+                            packages[cat_dir.name] = cat_packages
+
+            if category:
+                print(f"Packages in '{category}':")
+                if category in packages:
+                    for pkg in packages[category]:
+                        status = " [installed]" if detected_only and pkg["detected"] else ""
+                        print(f"  - {pkg['name']} (v{pkg['version']}){status}")
+                else:
+                    print("  No packages found")
+            else:
+                print("Available packages:")
+                print("=" * 50)
+                for cat in categories:
+                    print(f"\n{cat}:")
+                    for pkg in packages[cat]:
+                        status = " [installed]" if pkg["detected"] else ""
+                        print(f"  - {pkg['name']} (v{pkg['version']}){status}")
+                print("\n" + "=" * 50)
+
+        except Exception as e:
+            print(f"Error listing packages: {e}")
+            if self.verbose:
+                import traceback
+                traceback.print_exc()
+            sys.exit(1)
+
+    def search_command(self, query: str):
+        """Search for packages"""
+        try:
+            definitions_dir = Path("/etc/registry/definitions")
+
+            if not definitions_dir.exists():
+                definitions_dir = PROJECT_ROOT / "definitions"
+
+            results = []
+
+            if definitions_dir.exists():
+                for cat_dir in definitions_dir.iterdir():
+                    if cat_dir.is_dir() and not cat_dir.name.startswith("."):
+                        for pkg_dir in cat_dir.iterdir():
+                            if pkg_dir.is_dir() and (pkg_dir / "manifest.yaml").exists():
+                                manifest_path = pkg_dir / "manifest.yaml"
+                                with open(manifest_path) as f:
+                                    manifest = yaml.safe_load(f)
+
+                                pkg_name = pkg_dir.name
+                                app_name = manifest.get("application", {}).get("name", "").lower()
+                                query_lower = query.lower()
+
+                                if query_lower in pkg_name or query_lower in app_name:
+                                    results.append({
+                                        "category": cat_dir.name,
+                                        "name": pkg_name,
+                                        "version": manifest.get("application", {}).get("version", "unknown"),
+                                    })
+
+            if results:
+                print(f"Search results for '{query}':")
+                print("=" * 50)
+                for result in results:
+                    print(f"  {result['category']}/{result['name']} (v{result['version']})")
+                print("=" * 50)
+            else:
+                print(f"No results found for '{query}'")
+
+        except Exception as e:
+            print(f"Error searching: {e}")
+            sys.exit(1)
+
+    def info_command(self, package: str):
+        """Show package information"""
+        try:
+            parts = package.split("/")
+            if len(parts) != 2:
+                print("Invalid package format. Use: category/package")
+                sys.exit(1)
+
+            category, pkg_name = parts
+
+            definitions_dir = Path("/etc/registry/definitions")
+            if not definitions_dir.exists():
+                definitions_dir = PROJECT_ROOT / "definitions"
+
+            pkg_dir = definitions_dir / category / pkg_name
+            if not pkg_dir.exists():
+                print(f"Package not found: {category}/{pkg_name}")
+                sys.exit(1)
+
+            manifest_path = pkg_dir / "manifest.yaml"
+            if not manifest_path.exists():
+                print(f"No manifest found for {category}/{pkg_name}")
+                sys.exit(1)
+
+            with open(manifest_path) as f:
+                manifest = yaml.safe_load(f)
+
+            print(f"Package: {pkg_name}")
+            print(f"=" * 50)
+            print(f"Category: {category}")
+            print(f"Version: {manifest.get('application', {}).get('version', 'unknown')}")
+            print(f"Definition version: {manifest.get('definition', {}).get('libregistry_minimum_version', 'unknown')}")
+
+            structures = manifest.get("structure", {})
+            if structures:
+                print(f"\nConfiguration files:")
+                for struct_name, struct_file in structures.items():
+                    struct_path = pkg_dir / f"{struct_file}.yaml"
+                    if not struct_path.exists():
+                        struct_path = pkg_dir / struct_file
+
+                    if struct_path.exists():
+                        with open(struct_path) as f:
+                            struct_def = yaml.safe_load(f)
+
+                        file_info = struct_def.get("file", {})
+                        location = file_info.get("location", "unknown")
+                        format_type = file_info.get("format", "unknown")
+                        print(f"  - {struct_name}: {location} (format: {format_type})")
+
+            detect_paths = manifest.get("detect_installed", [])
+            if detect_paths:
+                print(f"\nDetection paths:")
+                for path in detect_paths:
+                    exists = Path(path).exists()
+                    status = "[installed]" if exists else "[not found]"
+                    print(f"  - {path} {status}")
+
+        except Exception as e:
+            print(f"Error getting info: {e}")
+            sys.exit(1)
+
+    def detect_command(self, package: str = None):
+        """Detect installed packages"""
+        self.list_command(category=package, detected_only=True)
+
+    def backup_list_command(self):
+        """List available backups"""
+        if not self.backup_dir.exists():
+            print("No backups found")
+            return
+
+        backups = sorted(self.backup_dir.glob("*.bak"), key=lambda p: p.stat().st_mtime, reverse=True)
+
+        if not backups:
+            print("No backups found")
+            return
+
+        print("Available backups:")
+        print("=" * 60)
+        for backup in backups:
+            mtime = backup.stat().st_mtime
+            import datetime
+            timestamp = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+            print(f"  {backup.name}")
+            print(f"    Created: {timestamp}")
+            print(f"    Path: {backup}")
+            print()
+        print("=" * 60)
+
+    def backup_restore_command(self, backup_name: str):
+        """Restore from a backup"""
+        if not self.backup_dir.exists():
+            print("No backups found")
+            sys.exit(1)
+
+        backup_path = self.backup_dir / backup_name
+        if not backup_path.exists():
+            backup_path = self.backup_dir / f"{backup_name}.bak"
+            if not backup_path.exists():
+                print(f"Backup not found: {backup_name}")
+                sys.exit(1)
+
+        backup_files = list(self.backup_dir.glob("*.bak"))
+        original_name = None
+        for b in backup_files:
+            if b.name == backup_path.name:
+                original_name = b.name.rsplit(".", 2)[0]
+                break
+
+        if original_name is None:
+            print("Could not determine original file for this backup")
+            sys.exit(1)
+
+        print(f"Note: Restoring from backup doesn't automatically restore to config file.")
+        print(f"Backup: {backup_path}")
+        print(f"Please manually restore to the original config location.")
+
+    def backup_delete_command(self, backup_name: str):
+        """Delete a backup"""
+        backup_path = self.backup_dir / backup_name
+        if not backup_path.exists():
+            backup_path = self.backup_dir / f"{backup_name}.bak"
+            if not backup_path.exists():
+                print(f"Backup not found: {backup_name}")
+                sys.exit(1)
+
+        try:
+            backup_path.unlink()
+            print(f"Deleted backup: {backup_name}")
+        except Exception as e:
+            print(f"Error deleting backup: {e}")
+            sys.exit(1)
+
 
 def main():
     """Main CLI entry point"""
@@ -699,6 +946,28 @@ Examples:
     # validate command
     subparsers.add_parser("validate", help="Validate pending changes against definitions")
 
+    # list command
+    list_parser = subparsers.add_parser("list", help="List available packages")
+    list_parser.add_argument("category", nargs="?", help="Category to list (optional)")
+    list_parser.add_argument("--detected", "-d", action="store_true", help="Show only detected packages")
+
+    # search command
+    search_parser = subparsers.add_parser("search", help="Search for packages")
+    search_parser.add_argument("query", help="Search query")
+
+    # info command
+    info_parser = subparsers.add_parser("info", help="Show package information")
+    info_parser.add_argument("package", help="Package (category/name)")
+
+    # detect command
+    detect_parser = subparsers.add_parser("detect", help="Detect installed packages")
+    detect_parser.add_argument("package", nargs="?", help="Package to check (optional)")
+
+    # backup subcommand
+    backup_subparsers = subparsers.add_parser("backup", help="Backup operations")
+    backup_subparsers.add_argument("action", choices=["list"], help="Backup action")
+    backup_subparsers.add_argument("backup_name", nargs="?", help="Backup name (for restore/delete)")
+
     args = parser.parse_args()
 
     cli = RegistryCLI(verbose=args.verbose)
@@ -719,6 +988,24 @@ Examples:
         cli.diff_command()
     elif args.command == "validate":
         cli.validate_command()
+    elif args.command == "list":
+        cli.list_command(category=args.category, detected_only=args.detected)
+    elif args.command == "search":
+        cli.search_command(args.query)
+    elif args.command == "info":
+        cli.info_command(args.package)
+    elif args.command == "detect":
+        cli.detect_command(args.package)
+    elif args.command == "backup":
+        if args.action == "list":
+            cli.backup_list_command()
+        elif args.action == "restore" and args.backup_name:
+            cli.backup_restore_command(args.backup_name)
+        elif args.action == "delete" and args.backup_name:
+            cli.backup_delete_command(args.backup_name)
+        else:
+            print("Usage: registry backup list")
+            sys.exit(1)
     else:
         parser.print_help()
         sys.exit(1)

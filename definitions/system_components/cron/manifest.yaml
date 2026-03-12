@@ -1,0 +1,14 @@
+manifest_scheme_revision: 1
+application:
+    name: cron
+    version: 3.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    crontab: crontab
+
+detect_installed:
+    - /usr/bin/crontab
+    - /etc/crontab
+    - /etc/cron.d

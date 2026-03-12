@@ -1,0 +1,36 @@
+file:
+    location: /etc/rsyslog.conf
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            module:
+                type: string
+                default: ""
+                description: Load a module
+
+            global:
+                type: string
+                default: ""
+                description: Global directive
+
+            ActionFileDefaultTemplate:
+                type: string
+                default: RSYSLOG_SyslogProtocol23Format
+                description: Default template for log files
+
+            IncludeConfig:
+                type: string
+                default: /etc/rsyslog.d/*.conf
+                description: Include additional config files

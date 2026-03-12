@@ -1,0 +1,14 @@
+manifest_scheme_revision: 1
+application:
+    name: logrotate
+    version: 3.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    logrotate_conf: logrotate.conf
+
+detect_installed:
+    - /usr/sbin/logrotate
+    - /etc/logrotate.conf
+    - /etc/logrotate.d

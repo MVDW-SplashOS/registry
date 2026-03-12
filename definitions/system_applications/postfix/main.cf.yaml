@@ -1,0 +1,131 @@
+file:
+    location: /etc/postfix/main.cf
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: false
+    delimiter: "="
+
+structures:
+    main:
+        options:
+            myhostname:
+                type: string
+                default: ""
+                description: The hostname of this mail system
+
+            mydomain:
+                type: string
+                default: ""
+                description: The domain name of this mail system
+
+            myorigin:
+                type: string
+                default: $myhostname
+                description: The domain name that locally-posted mail appears to come from
+
+            mydestination:
+                type: string
+                default: $myhostname, localhost.$mydomain, localhost
+                description: Domains that this machine considers final delivery target
+
+            mynetworks:
+                type: string
+                default: 127.0.0.0/8
+                description: Trusted networks
+
+            inet_interfaces:
+                type: string
+                default: all
+                description: Network interfaces to accept mail
+
+            inet_protocols:
+                type: string
+                default: all
+                description: IP protocols to use
+
+            home_mailbox:
+                type: string
+                default: ""
+                description: Mailbox location for local users
+
+            mail_spool_directory:
+                type: string
+                default: ""
+                description: Alternative mail spool directory
+
+            alias_maps:
+                type: string
+                default: hash:/etc/aliases
+                description: Alias database
+
+            alias_database:
+                type: string
+                default: hash:/etc/aliases
+                description: Alias database build command
+
+            virtual_alias_maps:
+                type: string
+                default: ""
+                description: Virtual alias maps
+
+            virtual_mailbox_domains:
+                type: string
+                default: ""
+                description: Virtual mailbox domains
+
+            virtual_mailbox_maps:
+                type: string
+                default: ""
+                description: Virtual mailbox maps
+
+            smtpd_banner:
+                type: string
+                default: $myhostname ESMTP
+                description: SMTP server banner
+
+            smtpd_helo_required:
+                type: boolean
+                default: false
+                description: Require HELO before accepting mail
+
+            smtpd_sasl_auth_enable:
+                type: boolean
+                default: false
+                description: Enable SASL authentication
+
+            smtpd_use_tls:
+                type: boolean
+                default: false
+                description: Enable TLS encryption
+
+            smtpd_tls_cert_file:
+                type: string
+                default: ""
+                description: TLS certificate file
+
+            smtpd_tls_key_file:
+                type: string
+                default: ""
+                description: TLS key file
+
+            smtpd_recipient_restrictions:
+                type: string
+                default: permit_mynetworks, reject_unauth_destination
+                description: Recipient restrictions
+
+            message_size_limit:
+                type: integer
+                default: 10240000
+                description: Maximum message size in bytes
+
+            mailbox_size_limit:
+                type: integer
+                default: 51200000
+                description: Maximum mailbox size in bytes

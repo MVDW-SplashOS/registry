@@ -1,0 +1,12 @@
+manifest_scheme_revision: 1
+application:
+    name: resolv
+    version: 1.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    resolv_conf: resolv.conf
+
+detect_installed:
+    - /etc/resolv.conf

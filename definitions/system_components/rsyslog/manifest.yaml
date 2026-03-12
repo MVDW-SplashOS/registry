@@ -1,0 +1,14 @@
+manifest_scheme_revision: 1
+application:
+    name: rsyslog
+    version: 8.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    rsyslog_conf: rsyslog.conf
+
+detect_installed:
+    - /usr/sbin/rsyslogd
+    - /etc/rsyslog.conf
+    - /etc/rsyslog.d

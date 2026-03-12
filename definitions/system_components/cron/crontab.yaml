@@ -1,0 +1,41 @@
+file:
+    location: /etc/crontab
+    format: key-value
+    encoding: utf-8
+    permissions: "0600"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: true
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            SHELL:
+                type: string
+                default: /bin/sh
+                description: Shell to use
+
+            PATH:
+                type: string
+                default: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+                description: PATH environment variable
+
+            MAILTO:
+                type: string
+                default: ""
+                description: Send mail to this user
+
+            HOME:
+                type: string
+                default: /
+                description: Home directory
+
+            CRON_TZ:
+                type: string
+                default: ""
+                description: Timezone for cron jobs
