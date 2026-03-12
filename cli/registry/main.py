@@ -4,7 +4,27 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "lib"))
 
-from .core.registry import RegistryCore as _RegistryCore
+from .core.registry import RegistryCore, RegistryCore as _RegistryCore
+from .commands import (
+    SetCommand,
+    GetCommand,
+    ResetCommand,
+    ApplyCommand,
+    DiscardCommand,
+    ViewChangesCommand,
+    DiffCommand,
+    ValidateCommand,
+    ValidateConfigCommand,
+    ListCommand,
+    SearchCommand,
+    InfoCommand,
+    DetectCommand,
+    BackupListCommand,
+    BackupRestoreCommand,
+    BackupDeleteCommand,
+    ExportCommand,
+    ImportCommand,
+)
 
 
 class RegistryCLI:
@@ -136,29 +156,6 @@ class RegistryCLI:
 
     def _ensure_directories(self):
         pass
-
-
-from .core.registry import RegistryCore
-from .commands import (
-    SetCommand,
-    GetCommand,
-    ResetCommand,
-    ApplyCommand,
-    DiscardCommand,
-    ViewChangesCommand,
-    DiffCommand,
-    ValidateCommand,
-    ValidateConfigCommand,
-    ListCommand,
-    SearchCommand,
-    InfoCommand,
-    DetectCommand,
-    BackupListCommand,
-    BackupRestoreCommand,
-    BackupDeleteCommand,
-    ExportCommand,
-    ImportCommand,
-)
 
 
 def main():

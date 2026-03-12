@@ -6,7 +6,6 @@ from .packages import ListCommand, SearchCommand, InfoCommand, DetectCommand
 from .backup import BackupListCommand, BackupRestoreCommand, BackupDeleteCommand
 from .io import ExportCommand, ImportCommand
 
-
 __all__ = [
     "Command",
     "SetCommand",

@@ -20,7 +20,7 @@ repos:
     rev: 7.0.0
     hooks:
       - id: flake8
-        args: ['--max-line-length=120', '--ignore=E501,W503,E402,F401']
+        args: ['--max-line-length=120', '--ignore=E501,W503,E402,F401,E402']
         files: \.(py)$
         types: [python]
         exclude: ^tests/

@@ -54,12 +54,18 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8
+        pip install flake8 ruff black
 
     - name: Lint code
       run: |
-        flake8 lib/ --max-line-length=120 --ignore=E501,W503
-        flake8 cli/ --max-line-length=120 --ignore=E501,W503
+        flake8 lib/ --max-line-length=120 --ignore=E501,W503,E402
+        flake8 cli/ --max-line-length=120 --ignore=E501,W503,E402
+
+    - name: Check ruff
+      run: ruff check lib/ cli/ --ignore=E402
+
+    - name: Check black
+      run: black --check lib/ cli/
 
   test-cli:
     runs-on: ubuntu-latest
