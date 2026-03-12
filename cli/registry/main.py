@@ -662,7 +662,6 @@ class RegistryCLI:
     def list_command(self, category: str = None, detected_only: bool = False):
         """List available packages"""
         try:
-            get_main_definition()
             definitions_dir = Path("/etc/registry/definitions")
 
             if not definitions_dir.exists():
