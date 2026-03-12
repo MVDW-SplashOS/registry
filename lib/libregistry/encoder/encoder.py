@@ -38,7 +38,11 @@ class Encoder:
 
     def get_filetype_encoder(self, filetype: str) -> Optional[FileTypeEncoder]:
         """Get an encoder for the specified filetype"""
-        return self.filetypes.get(filetype)
+        if not filetype:
+            return None
+        
+        normalized = filetype.replace("_", "-")
+        return self.filetypes.get(normalized)
 
     def encode_data(self, data: Dict[str, Any], structure: Dict[str, Any]) -> str:
         """Encode data using the appropriate filetype encoder"""

@@ -215,3 +215,131 @@ class TestCLIValidate:
         cli.validate_command()
         captured = capsys.readouterr()
         assert "No pending changes" in captured.out
+
+
+class TestCLIExport:
+    @pytest.fixture
+    def cli(self, tmp_path):
+        with patch.object(RegistryCLI, '_ensure_directories'):
+            cli = RegistryCLI(verbose=False)
+            cli.changes_file = tmp_path / "changes.yaml"
+            cli.backup_dir = tmp_path / "backups"
+            cli.backup_dir.mkdir(parents=True, exist_ok=True)
+            return cli
+
+    def test_export_empty(self, cli, capsys):
+        import io
+        import json
+        
+        cli.changes_file.touch()
+        
+        with patch('builtins.open', MagicMock()):
+            cli.export_command(file_path=None, format="yaml")
+
+    def test_export_with_changes(self, cli, tmp_path):
+        changes = {"test": {"category": {"key": "value"}}}
+        with open(cli.changes_file, 'w') as f:
+            yaml.dump(changes, f)
+        
+        output_file = tmp_path / "export.yaml"
+        cli.export_command(file_path=str(output_file), format="yaml")
+        
+        assert output_file.exists()
+
+
+class TestCLIImport:
+    @pytest.fixture
+    def cli(self, tmp_path):
+        with patch.object(RegistryCLI, '_ensure_directories'):
+            cli = RegistryCLI(verbose=False)
+            cli.changes_file = tmp_path / "changes.yaml"
+            cli.backup_dir = tmp_path / "backups"
+            cli.backup_dir.mkdir(parents=True, exist_ok=True)
+            return cli
+
+    def test_import_file(self, cli, tmp_path):
+        import_file = tmp_path / "import.yaml"
+        import_data = {"version": "1.0", "changes": {"test": {"cat": {"key": "value"}}}}
+        
+        with open(import_file, 'w') as f:
+            yaml.dump(import_data, f)
+        
+        cli.import_command(str(import_file), merge=False)
+        
+        with open(cli.changes_file) as f:
+            changes = yaml.safe_load(f)
+        
+        assert "test" in changes
+
+
+class TestCLIList:
+    @pytest.fixture
+    def cli(self, tmp_path):
+        with patch.object(RegistryCLI, '_ensure_directories'):
+            cli = RegistryCLI(verbose=False)
+            cli.changes_file = tmp_path / "changes.yaml"
+            cli.backup_dir = tmp_path / "backups"
+            cli.backup_dir.mkdir(parents=True, exist_ok=True)
+            return cli
+
+    def test_list_command(self, cli, capsys, monkeypatch):
+        def mock_definitions_dir(self):
+            return Path(__file__).parent.parent.parent / "definitions"
+        
+        monkeypatch.setattr("registry.main.PROJECT_ROOT", Path(__file__).parent.parent.parent)
+        
+        cli.list_command(category=None, detected_only=False)
+        captured = capsys.readouterr()
+        assert "Available packages" in captured.out or "system_components" in captured.out
+
+
+class TestCLISearch:
+    @pytest.fixture
+    def cli(self, tmp_path):
+        with patch.object(RegistryCLI, '_ensure_directories'):
+            cli = RegistryCLI(verbose=False)
+            cli.changes_file = tmp_path / "changes.yaml"
+            cli.backup_dir = tmp_path / "backups"
+            cli.backup_dir.mkdir(parents=True, exist_ok=True)
+            return cli
+
+    def test_search_command(self, cli, capsys, monkeypatch):
+        monkeypatch.setattr("registry.main.PROJECT_ROOT", Path(__file__).parent.parent.parent)
+        
+        cli.search_command("docker")
+        captured = capsys.readouterr()
+        assert "docker" in captured.out.lower() or "No results" in captured.out
+
+
+class TestCLIInfo:
+    @pytest.fixture
+    def cli(self, tmp_path):
+        with patch.object(RegistryCLI, '_ensure_directories'):
+            cli = RegistryCLI(verbose=False)
+            cli.changes_file = tmp_path / "changes.yaml"
+            cli.backup_dir = tmp_path / "backups"
+            cli.backup_dir.mkdir(parents=True, exist_ok=True)
+            return cli
+
+    def test_info_command(self, cli, capsys, monkeypatch):
+        monkeypatch.setattr("registry.main.PROJECT_ROOT", Path(__file__).parent.parent.parent)
+        
+        cli.info_command("system_applications/docker")
+        captured = capsys.readouterr()
+        assert "docker" in captured.out or "Package: docker" in captured.out
+
+
+class TestCLIBackup:
+    @pytest.fixture
+    def cli(self, tmp_path):
+        with patch.object(RegistryCLI, '_ensure_directories'):
+            cli = RegistryCLI(verbose=False)
+            cli.changes_file = tmp_path / "changes.yaml"
+            cli.backup_dir = tmp_path / "backups"
+            cli.backup_dir.mkdir(parents=True, exist_ok=True)
+            return cli
+
+    def test_backup_list_empty(self, cli, capsys):
+        cli.backup_list_command()
+        captured = capsys.readouterr()
+        assert "No backups found" in captured.out

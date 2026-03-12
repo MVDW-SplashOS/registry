@@ -38,7 +38,11 @@ class Decoder:
 
     def get_filetype_decoder(self, filetype: str) -> Optional[FileTypeDecoder]:
         """Get a decoder for the specified filetype"""
-        return self.filetypes.get(filetype)
+        if not filetype:
+            return None
+        
+        normalized = filetype.replace("_", "-")
+        return self.filetypes.get(normalized)
 
     def decode_file(self, file_path: str, structure: Dict[str, Any]) -> Dict[str, Any]:
         """Decode a file using its structure definition"""

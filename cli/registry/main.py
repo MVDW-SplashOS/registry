@@ -992,20 +992,41 @@ class RegistryCLI:
                 print(f"Backup not found: {backup_name}")
                 sys.exit(1)
 
-        backup_files = list(self.backup_dir.glob("*.bak"))
-        original_name = None
-        for b in backup_files:
-            if b.name == backup_path.name:
-                original_name = b.name.rsplit(".", 2)[0]
-                break
+        original_name = backup_path.stem
 
-        if original_name is None:
-            print("Could not determine original file for this backup")
+        config_names = {
+            "daemon.json": "/etc/docker/daemon.json",
+            "sshd_config": "/etc/ssh/sshd_config",
+            "nginx.conf": "/etc/nginx/nginx.conf",
+            "apache2.conf": "/etc/apache2/apache2.conf",
+        }
+
+        original_path = config_names.get(original_name)
+
+        if not original_path:
+            print(f"Could not determine original location for: {original_name}")
+            print(f"Backup file: {backup_path}")
+            if input("Enter original file path (or press Enter to cancel): ").strip():
+                original_path = input("Enter original file path: ").strip()
+            else:
+                sys.exit(1)
+
+        original_file = Path(original_path)
+        
+        if not original_file.parent.exists():
+            print(f"Directory does not exist: {original_file.parent}")
             sys.exit(1)
 
-        print(f"Note: Restoring from backup doesn't automatically restore to config file.")
-        print(f"Backup: {backup_path}")
-        print(f"Please manually restore to the original config location.")
+        try:
+            shutil.copy2(backup_path, original_file)
+            print(f"Restored: {original_path}")
+            print(f"From backup: {backup_path}")
+        except Exception as e:
+            print(f"Error restoring backup: {e}")
+            if self.verbose:
+                import traceback
+                traceback.print_exc()
+            sys.exit(1)
 
     def backup_delete_command(self, backup_name: str):
         """Delete a backup"""
@@ -1111,7 +1132,7 @@ Examples:
 
     # backup subcommand
     backup_subparsers = subparsers.add_parser("backup", help="Backup operations")
-    backup_subparsers.add_argument("action", choices=["list"], help="Backup action")
+    backup_subparsers.add_argument("action", choices=["list", "restore", "delete"], help="Backup action")
     backup_subparsers.add_argument("backup_name", nargs="?", help="Backup name (for restore/delete)")
 
     # export command
