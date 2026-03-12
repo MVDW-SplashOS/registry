@@ -11,10 +11,10 @@ def get_yaml(path):
         with open(yaml_path, "r") as file:
             yaml_data = yaml.safe_load(file)
         return yaml_data
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         logger.print_error(f"Definition YAML file not found: {path}")
-    except Exception as e:
-        logger.print_error(f"Failed to load definition YAML file: {path}", e)
+    except Exception:
+        logger.print_error(f"Failed to load definition YAML file: {path}")
     return {}
 
 

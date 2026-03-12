@@ -1,5 +1,3 @@
-import sys
-import json
 from typing import Dict, Any, List
 
 try:
@@ -28,7 +26,7 @@ class TomlEncoder(FileTypeEncoder):
     def _manual_toml_encode(self, data: Dict[str, Any], prefix: str = "") -> str:
         """Manually encode data to TOML format"""
         lines = []
-        
+
         for key, value in data.items():
             if isinstance(value, dict):
                 lines.append(f"[{key}]")
@@ -62,7 +60,7 @@ class TomlEncoder(FileTypeEncoder):
                     lines.append(f"{formatted_key} = \"\"")
                 else:
                     lines.append(f'{formatted_key} = "{value}"')
-        
+
         return "\n".join(lines)
 
     def _format_key(self, key: str) -> str:

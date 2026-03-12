@@ -40,7 +40,7 @@ class Encoder:
         """Get an encoder for the specified filetype"""
         if not filetype:
             return None
-        
+
         normalized = filetype.replace("_", "-")
         return self.filetypes.get(normalized)
 

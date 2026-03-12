@@ -1,5 +1,4 @@
-import re
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from ....encoder.base import FileTypeEncoder
 
 

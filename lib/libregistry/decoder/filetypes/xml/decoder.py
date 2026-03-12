@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as ET
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from ....decoder.base import FileTypeDecoder
 
 

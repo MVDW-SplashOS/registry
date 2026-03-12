@@ -34,7 +34,7 @@ class TomlDecoder(FileTypeDecoder):
                 return tomli_w.dumps(data)
             except ImportError:
                 pass
-            
+
             return self._manual_toml_encode(data)
         except Exception as e:
             raise DecodingError(f"Failed to encode to TOML: {e}")
@@ -42,7 +42,7 @@ class TomlDecoder(FileTypeDecoder):
     def _manual_toml_encode(self, data: Dict[str, Any]) -> str:
         """Manually encode data to TOML format"""
         lines = []
-        
+
         for key, value in data.items():
             if isinstance(value, dict):
                 lines.append(f"[{key}]")
@@ -76,7 +76,7 @@ class TomlDecoder(FileTypeDecoder):
                     lines.append(f"{formatted_key} = \"\"")
                 else:
                     lines.append(f'{formatted_key} = "{value}"')
-        
+
         return "\n".join(lines)
 
     def _format_key(self, key: str) -> str:

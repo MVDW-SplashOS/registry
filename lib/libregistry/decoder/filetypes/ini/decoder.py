@@ -14,14 +14,14 @@ class IniDecoder(FileTypeDecoder):
         try:
             config = configparser.ConfigParser()
             config.read_string(file_content)
-            
+
             result = {}
             for section in config.sections():
                 result[section] = dict(config.items(section))
-            
+
             if config.has_section(configparser.DEFAULTSECT):
                 result["main"] = dict(config.defaults())
-            
+
             return result
         except Exception as e:
             raise DecodingError(f"Failed to decode INI: {e}")
@@ -30,7 +30,7 @@ class IniDecoder(FileTypeDecoder):
         """Encode data to INI format"""
         try:
             config = configparser.ConfigParser()
-            
+
             for section_name, section_data in data.items():
                 if isinstance(section_data, dict):
                     config.add_section(section_name)
@@ -41,7 +41,7 @@ class IniDecoder(FileTypeDecoder):
                             config.set(section_name, key, " ".join(str(v) for v in value))
                         else:
                             config.set(section_name, key, str(value))
-            
+
             output = io.StringIO()
             config.write(output)
             return output.getvalue()

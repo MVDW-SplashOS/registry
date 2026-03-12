@@ -12,7 +12,7 @@ class IniEncoder(FileTypeEncoder):
         """Encode data to INI format"""
         try:
             config = configparser.ConfigParser()
-            
+
             for section_name, section_data in data.items():
                 if isinstance(section_data, dict):
                     config.add_section(section_name)
@@ -23,7 +23,7 @@ class IniEncoder(FileTypeEncoder):
                             config.set(section_name, key, " ".join(str(v) for v in value))
                         else:
                             config.set(section_name, key, str(value))
-            
+
             import io
             output = io.StringIO()
             config.write(output)
