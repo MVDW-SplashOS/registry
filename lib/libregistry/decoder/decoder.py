@@ -1,16 +1,23 @@
 import os
+import logging
 import importlib
 from typing import Dict, Any, List, Optional
 from .base import FileTypeDecoder
 from .file import File
+from ..encoder import encoder as encoder_module
+
+logger = logging.getLogger(__name__)
 
 
 class Decoder:
     """Main decoder class that handles file type detection and decoding"""
 
-    def __init__(self):
-        self.filetypes: Dict[str, FileTypeDecoder] = {}
-        self._load_filetypes()
+    def __init__(self, filetypes: Optional[Dict[str, FileTypeDecoder]] = None):
+        if filetypes is not None:
+            self.filetypes = filetypes
+        else:
+            self.filetypes: Dict[str, FileTypeDecoder] = {}
+            self._load_filetypes()
 
     def _load_filetypes(self):
         """Dynamically load all filetype decoders from the filetypes directory"""
@@ -34,7 +41,7 @@ class Decoder:
                         self.filetypes[item] = decoder_instance
 
                 except ImportError as e:
-                    print(f"Warning: Could not load filetype decoder for {item}: {e}")
+                    logger.warning("Could not load filetype decoder for %s: %s", item, e)
 
     def get_filetype_decoder(self, filetype: str) -> Optional[FileTypeDecoder]:
         """Get a decoder for the specified filetype"""
@@ -68,11 +75,11 @@ class Decoder:
         if not filetype:
             filetype = self._detect_filetype(file_path)
 
-        decoder = self.get_filetype_decoder(filetype)
-        if not decoder:
+        enc = encoder_module.get_encoder().get_filetype_encoder(filetype)
+        if not enc:
             raise ValueError(f"No encoder available for filetype: {filetype}")
 
-        file_content = decoder.encode(data, structure)
+        file_content = enc.encode(data, structure)
 
         file = File(file_path)
         file.write(file_content)
@@ -106,5 +113,33 @@ class Decoder:
         return filetype_map.get(ext, "key-value")
 
 
-# Global decoder instance
-decoder = Decoder()
+_default_decoder: Optional[Decoder] = None
+
+
+def get_decoder() -> Decoder:
+    """Get the global decoder instance (factory method for testability)."""
+    global _default_decoder
+    if _default_decoder is None:
+        _default_decoder = Decoder()
+    return _default_decoder
+
+
+def set_decoder(decoder_instance: Decoder) -> None:
+    """Set a custom decoder instance (useful for testing)."""
+    global _default_decoder
+    _default_decoder = decoder_instance
+
+
+def reset_decoder() -> None:
+    """Reset the decoder to create a new instance on next get_decoder() call."""
+    global _default_decoder
+    _default_decoder = None
+
+
+class _DefaultDecoderProxy:
+    """Proxy to maintain backward compatibility with global decoder usage."""
+    def __getattr__(self, name: str):
+        return getattr(get_decoder(), name)
+
+
+decoder = _DefaultDecoderProxy()

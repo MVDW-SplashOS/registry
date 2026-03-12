@@ -150,10 +150,10 @@ key2 = value2
             }
         }
         structure = {"format": "ini"}
-        
+
         encoded = self.decoder.encode(original_data, structure)
         decoded = self.decoder.decode(encoded, structure)
-        
+
         assert decoded["main"]["host"] == "localhost"
         assert decoded["database"]["host"] == "db.local"
 

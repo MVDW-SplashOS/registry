@@ -65,7 +65,7 @@ class TestEncoderInterfaceConsistency:
     def test_encode_returns_string(self):
         test_data = {"main": {"key": "value"}}
         test_structure = {"format": "json"}
-        
+
         for filetype in global_encoder.filetypes:
             enc = global_encoder.get_filetype_encoder(filetype)
             result = enc.encode(test_data, test_structure)
@@ -74,7 +74,7 @@ class TestEncoderInterfaceConsistency:
     def test_validate_structure_returns_list(self):
         test_data = {"main": {"key": "value"}}
         test_structure = {"format": "json", "structures": {}}
-        
+
         for filetype in global_encoder.filetypes:
             enc = global_encoder.get_filetype_encoder(filetype)
             result = enc.validate_structure(test_data, test_structure)
@@ -103,7 +103,7 @@ class TestDecoderInterfaceConsistency:
     def test_decode_returns_dict(self):
         test_content = '{"key": "value"}'
         test_structure = {"format": "json"}
-        
+
         for filetype in global_decoder.filetypes:
             dec = global_decoder.get_filetype_decoder(filetype)
             try:
@@ -115,7 +115,7 @@ class TestDecoderInterfaceConsistency:
     def test_encode_returns_string(self):
         test_data = {"main": {"key": "value"}}
         test_structure = {"format": "json"}
-        
+
         for filetype in global_decoder.filetypes:
             dec = global_decoder.get_filetype_decoder(filetype)
             result = dec.encode(test_data, test_structure)
@@ -124,7 +124,7 @@ class TestDecoderInterfaceConsistency:
     def test_validate_returns_list(self):
         test_data = {"main": {"key": "value"}}
         test_structure = {"format": "json"}
-        
+
         for filetype in global_decoder.filetypes:
             dec = global_decoder.get_filetype_decoder(filetype)
             result = dec.validate(test_data, test_structure)

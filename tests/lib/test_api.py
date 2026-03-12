@@ -26,7 +26,7 @@ class TestRegistrySession:
             "name": "Nginx",
             "detect_installed": ["/usr/sbin/nginx"]
         }
-        
+
         def mock_get_package_definition(main_def, category, package, metadata_only=False):
             if category == "system_components":
                 if package == "docker":
@@ -34,13 +34,13 @@ class TestRegistrySession:
                 elif package == "nginx":
                     return mock_pkg_def_nginx
             return None
-        
+
         monkeypatch.setattr("libregistry.definitions.get_main_definition", lambda: mock_main_def)
         monkeypatch.setattr("libregistry.definitions.get_package_definition", mock_get_package_definition)
 
     def test_registry_session_init(self, mock_definitions):
         session = RegistrySession()
-        
+
         assert session.main_definition is not None
         assert "packages" in session.main_definition
 
@@ -48,7 +48,7 @@ class TestRegistrySession:
         with patch("os.path.exists", return_value=True):
             session = RegistrySession()
             result = session.check_packages_installed()
-            
+
             assert "system_components" in result
             assert "docker" in result["system_components"]
             assert "nginx" in result["system_components"]
@@ -56,11 +56,11 @@ class TestRegistrySession:
     def test_check_packages_installed_some_missing(self, mock_definitions):
         def mock_exists(path):
             return "/docker" in path
-        
+
         with patch("os.path.exists", mock_exists):
             session = RegistrySession()
             result = session.check_packages_installed()
-            
+
             assert "docker" in result["system_components"]
             assert "nginx" not in result["system_components"]
 
@@ -68,7 +68,7 @@ class TestRegistrySession:
         with patch("os.path.exists", return_value=False):
             session = RegistrySession()
             result = session.check_packages_installed()
-            
+
             assert "system_components" in result
             assert "docker" not in result["system_components"]
             assert "nginx" not in result["system_components"]
@@ -77,12 +77,12 @@ class TestRegistrySession:
         with patch("os.path.exists", return_value=True):
             session = RegistrySession()
             result = session.check_packages_installed()
-            
+
             assert result is session.main_definition["packages"]
 
     def test_categories_populated(self, mock_definitions):
         session = RegistrySession()
-        
+
         assert hasattr(session, 'categories')
         assert session.categories == {}
 
@@ -93,12 +93,12 @@ class TestRegistrySessionEdgeCases:
             "categories": [],
             "packages": {}
         }
-        
+
         monkeypatch.setattr("libregistry.definitions.get_main_definition", lambda: mock_main_def)
-        
+
         session = RegistrySession()
         result = session.check_packages_installed()
-        
+
         assert result == {}
 
     def test_session_with_no_detect_paths(self, monkeypatch):
@@ -108,14 +108,14 @@ class TestRegistrySessionEdgeCases:
                 "test_category": ["test_package"]
             }
         }
-        
+
         def mock_get_package_definition(main_def, category, package, metadata_only=False):
             return {"name": "Test Package", "detect_installed": []}
-        
+
         monkeypatch.setattr("libregistry.definitions.get_main_definition", lambda: mock_main_def)
         monkeypatch.setattr("libregistry.definitions.get_package_definition", mock_get_package_definition)
-        
+
         session = RegistrySession()
         result = session.check_packages_installed()
-        
+
         assert "test_package" not in result["test_category"]

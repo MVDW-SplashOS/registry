@@ -1,8 +1,10 @@
 from . import const
-from . import logger
+from .logger import get_logger
 
 import yaml
 import os
+
+logger = get_logger("definitions")
 
 
 def get_yaml(path):
@@ -12,9 +14,9 @@ def get_yaml(path):
             yaml_data = yaml.safe_load(file)
         return yaml_data
     except FileNotFoundError:
-        logger.print_error(f"Definition YAML file not found: {path}")
+        logger.error("Definition YAML file not found: %s", path)
     except Exception:
-        logger.print_error(f"Failed to load definition YAML file: {path}")
+        logger.error("Failed to load definition YAML file: %s", path)
     return {}
 
 
@@ -33,6 +35,6 @@ def get_main_definition():
 def get_package_definition(main_definition, category, package, metadata_only=False):
     package_manifest = get_yaml(os.path.join(category, package, "manifest.yaml"))
     if len(package_manifest) == 0:
-        logger.print_error(f"Package manifest is empty: {category}/{package}")
+        logger.error("Package manifest is empty: %s/%s", category, package)
         return None
     return package_manifest

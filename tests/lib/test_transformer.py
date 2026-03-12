@@ -387,7 +387,7 @@ class TestTransformer:
     def test_transform_no_suitable_transformer(self):
         data = {"key": "value"}
         transformation = {"type": "unknown_type"}
-        
+
         with pytest.raises(ValueError) as exc_info:
             self.transformer.transform(data, transformation)
         assert "Unknown transformation type" in str(exc_info.value)
@@ -396,13 +396,13 @@ class TestTransformer:
         class CustomTransformer(DataTransformer):
             def transform(self, data, transformation):
                 return "custom_result"
-            
+
             def can_transform(self, source_format, target_format):
                 return source_format == "custom" and target_format == "custom"
-        
+
         custom = CustomTransformer()
         self.transformer.register_transformer(custom)
-        
+
         assert len(self.transformer.transformers) == 3
 
 

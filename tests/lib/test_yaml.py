@@ -143,10 +143,10 @@ disabled: false
             }
         }
         structure = {"format": "yaml"}
-        
+
         encoded = self.decoder.encode(original_data, structure)
         decoded = self.decoder.decode(encoded, structure)
-        
+
         assert decoded["server"]["host"] == "localhost"
         assert decoded["server"]["port"] == 8080
 

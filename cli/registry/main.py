@@ -1,7 +1,6 @@
 import os
 import sys
 import argparse
-import tempfile
 import shutil
 import subprocess
 import yaml
@@ -22,16 +21,10 @@ try:
         RegistrySession,
         decoder,
         encoder,
-        transformer,
         File,
         get_main_definition,
         get_package_definition,
         RegistryError,
-        ConfigurationNotFoundError,
-        PermissionDeniedError,
-        ValidationError,
-        EncodingError,
-        DecodingError,
     )
 except ImportError as e:
     print(f"Error: Could not import libregistry. Make sure it's installed: {e}")
@@ -73,8 +66,6 @@ class RegistryCLI:
             return {}
 
         try:
-            import yaml
-
             with open(self.changes_file, "r") as f:
                 return yaml.safe_load(f) or {}
         except Exception as e:
@@ -82,18 +73,40 @@ class RegistryCLI:
             return {}
 
     def _save_changes(self, changes: Dict[str, Any]):
-        """Save pending changes to file"""
-        try:
-            import yaml
+        """Save pending changes to file atomically"""
+        import tempfile
+        import os as _os
 
-            with open(self.changes_file, "w") as f:
-                yaml.dump(changes, f, default_flow_style=False)
+        try:
+            changes_file_dir = self.changes_file.parent
+            fd, tmp_path = tempfile.mkstemp(
+                dir=changes_file_dir,
+                prefix=".changes_",
+                suffix=".tmp"
+            )
+            try:
+                with _os.fdopen(fd, "w") as f:
+                    yaml.dump(changes, f, default_flow_style=False)
+                _os.replace(tmp_path, self.changes_file)
+            except Exception:
+                try:
+                    _os.unlink(tmp_path)
+                except OSError:
+                    pass
+                raise
         except Exception as e:
             print(f"Error: Could not save changes file: {e}")
             sys.exit(1)
 
     def _parse_path(self, path: str) -> tuple:
         """Parse registry path into components"""
+        import re
+
+        if not path or ".." in path or path.startswith("/"):
+            raise ValueError(
+                f"Invalid path format: {path}. Path must not be empty, absolute, or contain '..'"
+            )
+
         parts = path.split("/")
         if len(parts) < 3:
             raise ValueError(
@@ -103,6 +116,11 @@ class RegistryCLI:
         category = parts[0]
         package = parts[1]
         config_path = "/".join(parts[2:])
+
+        if not re.match(r'^[a-zA-Z0-9_\-\.]+$', category):
+            raise ValueError(f"Invalid category name: {category}")
+        if not re.match(r'^[a-zA-Z0-9_\-\.]+$', package):
+            raise ValueError(f"Invalid package name: {package}")
 
         return category, package, config_path
 
@@ -131,8 +149,6 @@ class RegistryCLI:
                     Path("/etc/registry/definitions") / category / package / struct_file
                 )
                 if struct_path.exists():
-                    import yaml
-
                     with open(struct_path, "r") as f:
                         return yaml.safe_load(f)
 
@@ -145,8 +161,6 @@ class RegistryCLI:
         )
 
         if struct_path.exists():
-            import yaml
-
             with open(struct_path, "r") as f:
                 return yaml.safe_load(f)
 
@@ -168,7 +182,7 @@ class RegistryCLI:
             parsed_value = self._parse_value(value)
 
             try:
-                structure = self._get_config_structure(category, package, config_path)
+                self._get_config_structure(category, package, config_path)
             except Exception as e:
                 if self.verbose:
                     raise
@@ -321,7 +335,7 @@ class RegistryCLI:
                                 permission_issues.append(
                                     f"{category}/{package}/{config_path}"
                                 )
-                    except Exception as e:
+                    except Exception:
                         # If we can't even read the structure, assume permission issue
                         permission_issues.append(f"{category}/{package}/{config_path}")
 
@@ -568,7 +582,7 @@ class RegistryCLI:
                             print(f"  Current value: {old_value}")
                             print(f"  New value:     {new_value}")
                         else:
-                            print(f"  Current value: <file does not exist>")
+                            print("  Current value: <file does not exist>")
                             print(f"  New value:     {new_value}")
 
                     except Exception as e:
@@ -648,7 +662,7 @@ class RegistryCLI:
     def list_command(self, category: str = None, detected_only: bool = False):
         """List available packages"""
         try:
-            main_def = get_main_definition()
+            get_main_definition()
             definitions_dir = Path("/etc/registry/definitions")
 
             if not definitions_dir.exists():
@@ -785,14 +799,14 @@ class RegistryCLI:
                 manifest = yaml.safe_load(f)
 
             print(f"Package: {pkg_name}")
-            print(f"=" * 50)
+            print("=" * 50)
             print(f"Category: {category}")
             print(f"Version: {manifest.get('application', {}).get('version', 'unknown')}")
             print(f"Definition version: {manifest.get('definition', {}).get('libregistry_minimum_version', 'unknown')}")
 
             structures = manifest.get("structure", {})
             if structures:
-                print(f"\nConfiguration files:")
+                print("\nConfiguration files:")
                 for struct_name, struct_file in structures.items():
                     struct_path = pkg_dir / f"{struct_file}.yaml"
                     if not struct_path.exists():
@@ -809,7 +823,7 @@ class RegistryCLI:
 
             detect_paths = manifest.get("detect_installed", [])
             if detect_paths:
-                print(f"\nDetection paths:")
+                print("\nDetection paths:")
                 for path in detect_paths:
                     exists = Path(path).exists()
                     status = "[installed]" if exists else "[not found]"
@@ -857,7 +871,6 @@ class RegistryCLI:
             filetype_decoder = decoder.get_filetype_decoder(format_type)
             if filetype_decoder:
                 validation_errors = filetype_decoder.validate(current_config, encoding_structure)
-                
                 if validation_errors:
                     print(f"Validation FAILED ({len(validation_errors)} error(s)):")
                     for error in validation_errors:
@@ -971,13 +984,47 @@ class RegistryCLI:
         print("=" * 60)
         for backup in backups:
             mtime = backup.stat().st_mtime
-            import datetime
             timestamp = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
             print(f"  {backup.name}")
             print(f"    Created: {timestamp}")
             print(f"    Path: {backup}")
             print()
         print("=" * 60)
+
+    def _find_original_path(self, backup_name: str) -> Optional[Path]:
+        """Try to find the original path for a backup file from definitions."""
+        original_name = Path(backup_name).stem
+
+        definitions_dir = Path("/etc/registry/definitions")
+        if not definitions_dir.exists():
+            definitions_dir = PROJECT_ROOT / "definitions"
+
+        if definitions_dir.exists():
+            for cat_dir in definitions_dir.iterdir():
+                if cat_dir.is_dir():
+                    for pkg_dir in cat_dir.iterdir():
+                        if pkg_dir.is_dir():
+                            manifest_path = pkg_dir / "manifest.yaml"
+                            if manifest_path.exists():
+                                try:
+                                    with open(manifest_path) as f:
+                                        manifest = yaml.safe_load(f)
+                                    structures = manifest.get("structure", {})
+                                    for struct_name, struct_file in structures.items():
+                                        if struct_name == original_name or struct_file == original_name:
+                                            struct_path = pkg_dir / f"{struct_file}.yaml"
+                                            if not struct_path.exists():
+                                                struct_path = pkg_dir / struct_file
+                                            if struct_path.exists():
+                                                with open(struct_path) as f:
+                                                    struct_def = yaml.safe_load(f)
+                                                file_info = struct_def.get("file", {})
+                                                location = file_info.get("location")
+                                                if location:
+                                                    return Path(location)
+                                except Exception:
+                                    continue
+        return None
 
     def backup_restore_command(self, backup_name: str):
         """Restore from a backup"""
@@ -992,33 +1039,23 @@ class RegistryCLI:
                 print(f"Backup not found: {backup_name}")
                 sys.exit(1)
 
-        original_name = backup_path.stem
-
-        config_names = {
-            "daemon.json": "/etc/docker/daemon.json",
-            "sshd_config": "/etc/ssh/sshd_config",
-            "nginx.conf": "/etc/nginx/nginx.conf",
-            "apache2.conf": "/etc/apache2/apache2.conf",
-        }
-
-        original_path = config_names.get(original_name)
+        original_path = self._find_original_path(backup_path.name)
 
         if not original_path:
-            print(f"Could not determine original location for: {original_name}")
+            print(f"Could not determine original location for: {backup_path.stem}")
             print(f"Backup file: {backup_path}")
-            if input("Enter original file path (or press Enter to cancel): ").strip():
-                original_path = input("Enter original file path: ").strip()
+            user_input = input("Enter original file path (or press Enter to cancel): ").strip()
+            if user_input:
+                original_path = Path(user_input)
             else:
                 sys.exit(1)
 
-        original_file = Path(original_path)
-        
-        if not original_file.parent.exists():
-            print(f"Directory does not exist: {original_file.parent}")
+        if not original_path.parent.exists():
+            print(f"Directory does not exist: {original_path.parent}")
             sys.exit(1)
 
         try:
-            shutil.copy2(backup_path, original_file)
+            shutil.copy2(backup_path, original_path)
             print(f"Restored: {original_path}")
             print(f"From backup: {backup_path}")
         except Exception as e:

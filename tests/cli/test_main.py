@@ -15,7 +15,7 @@ def create_cli_mock(tmp_path):
     with patch('registry.main.RegistrySession') as mock_session:
         mock_session.return_value.main_definition = {"categories": [], "packages": {}}
         mock_session.return_value.categories = {}
-        
+
         from registry.main import RegistryCLI
         with patch.object(RegistryCLI, '_ensure_directories'):
             cli = RegistryCLI(verbose=False)
@@ -32,58 +32,58 @@ class TestCLISetCommand:
 
     def test_set_simple_value(self, cli, tmp_path):
         cli.set_command("test/category/test_config/key", "value")
-        
+
         with open(cli.changes_file) as f:
             changes = yaml.safe_load(f)
-        
+
         assert changes["test"]["category"]["test_config/key"] == "value"
 
     def test_set_boolean_true(self, cli):
         cli.set_command("test/category/test_config/enabled", "true")
-        
+
         with open(cli.changes_file) as f:
             changes = yaml.safe_load(f)
-        
+
         assert changes["test"]["category"]["test_config/enabled"] is True
 
     def test_set_boolean_yes(self, cli):
         cli.set_command("test/category/test_config/enabled", "yes")
-        
+
         with open(cli.changes_file) as f:
             changes = yaml.safe_load(f)
-        
+
         assert changes["test"]["category"]["test_config/enabled"] is True
 
     def test_set_boolean_false(self, cli):
         cli.set_command("test/category/test_config/enabled", "false")
-        
+
         with open(cli.changes_file) as f:
             changes = yaml.safe_load(f)
-        
+
         assert changes["test"]["category"]["test_config/enabled"] is False
 
     def test_set_integer(self, cli):
         cli.set_command("test/category/test_config/port", "8080")
-        
+
         with open(cli.changes_file) as f:
             changes = yaml.safe_load(f)
-        
+
         assert changes["test"]["category"]["test_config/port"] == 8080
 
     def test_set_float(self, cli):
         cli.set_command("test/category/test_config/rate", "3.14")
-        
+
         with open(cli.changes_file) as f:
             changes = yaml.safe_load(f)
-        
+
         assert changes["test"]["category"]["test_config/rate"] == 3.14
 
     def test_set_string_with_spaces(self, cli):
         cli.set_command("test/category/test_config/name", "hello world")
-        
+
         with open(cli.changes_file) as f:
             changes = yaml.safe_load(f)
-        
+
         assert changes["test"]["category"]["test_config/name"] == "hello world"
 
 
@@ -107,9 +107,9 @@ class TestCLIViewChanges:
         }
         with open(cli.changes_file, 'w') as f:
             yaml.dump(changes, f)
-        
+
         cli.view_changes_command()
-        
+
         captured = capsys.readouterr()
         assert "test:" in captured.out
         assert "config/key = value" in captured.out
@@ -129,12 +129,12 @@ class TestCLIDiscard:
         changes = {"test": {"category": {"key": "value"}}}
         with open(cli.changes_file, 'w') as f:
             yaml.dump(changes, f)
-        
+
         cli.discard_command()
-        
+
         with open(cli.changes_file) as f:
             remaining = yaml.safe_load(f)
-        
+
         assert remaining == {} or remaining is None
 
 
@@ -153,21 +153,21 @@ class TestCLIReset:
         }
         with open(cli.changes_file, 'w') as f:
             yaml.dump(changes, f)
-        
+
         cli.reset_command("test/category/config/key")
-        
+
         with open(cli.changes_file) as f:
             remaining = yaml.safe_load(f)
-        
+
         assert "config/key" not in remaining.get("test", {}).get("category", {})
 
     def test_reset_nonexistent_path(self, cli, capsys):
         changes = {"test": {"category": {"key": "value"}}}
         with open(cli.changes_file, 'w') as f:
             yaml.dump(changes, f)
-        
+
         cli.reset_command("test/category/config/other")
-        
+
         captured = capsys.readouterr()
         assert "No pending changes" in captured.out
 
@@ -209,21 +209,21 @@ class TestCLIExport:
     def test_export_empty(self, cli, tmp_path):
         import io
         import json
-        
+
         cli.changes_file.touch()
-        
+
         cli.export_command(file_path=str(tmp_path / "export.yaml"), format="yaml")
-        
+
         assert (tmp_path / "export.yaml").exists()
 
     def test_export_with_changes(self, cli, tmp_path):
         changes = {"test": {"category": {"key": "value"}}}
         with open(cli.changes_file, 'w') as f:
             yaml.dump(changes, f)
-        
+
         output_file = tmp_path / "export.yaml"
         cli.export_command(file_path=str(output_file), format="yaml")
-        
+
         assert output_file.exists()
 
 
@@ -235,15 +235,15 @@ class TestCLIImport:
     def test_import_file(self, cli, tmp_path):
         import_file = tmp_path / "import.yaml"
         import_data = {"version": "1.0", "changes": {"test": {"cat": {"key": "value"}}}}
-        
+
         with open(import_file, 'w') as f:
             yaml.dump(import_data, f)
-        
+
         cli.import_command(str(import_file), merge=False)
-        
+
         with open(cli.changes_file) as f:
             changes = yaml.safe_load(f)
-        
+
         if changes is None:
             changes = {}
         assert len(changes) >= 0

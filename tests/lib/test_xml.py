@@ -102,10 +102,10 @@ class TestXmlEncoder:
             }
         }
         structure = {"format": "xml", "root_element": "config"}
-        
+
         encoded = self.encoder.encode(original_data, structure)
         decoded = decoder.decode(encoded, structure)
-        
+
         assert decoded["server"]["host"] == "localhost"
 
 
@@ -134,10 +134,10 @@ class TestXmlDecoder:
     def test_decode_encode_roundtrip(self):
         original_data = {"server": {"host": "localhost", "port": "8080"}}
         structure = {"format": "xml", "root_element": "config"}
-        
+
         encoded = self.decoder.encode(original_data, structure)
         decoded = self.decoder.decode(encoded, structure)
-        
+
         assert decoded["server"]["host"] == "localhost"
 
     def test_decode_invalid_xml(self):

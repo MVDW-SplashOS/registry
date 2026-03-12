@@ -1,7 +1,10 @@
 import json
+import logging
 import yaml
 from typing import Dict, Any, List, Optional, Callable
 from abc import ABC, abstractmethod
+
+logger = logging.getLogger(__name__)
 
 
 class DataTransformer(ABC):
@@ -127,7 +130,7 @@ class FormatTransformer(DataTransformer):
 
         return result
 
-    def _get_transform_function(self, function_name: str) -> Callable:
+    def _get_transform_function(self, function_name: str) -> Callable[[Any], Any]:
         """Get transformation function by name"""
         functions = {
             "to_lower": lambda x: x.lower() if isinstance(x, str) else x,
@@ -362,5 +365,33 @@ class Transformer:
         self.transformers.append(transformer)
 
 
-# Global transformer instance
-transformer = Transformer()
+_default_transformer: Optional[Transformer] = None
+
+
+def get_transformer() -> Transformer:
+    """Get the global transformer instance (factory method for testability)."""
+    global _default_transformer
+    if _default_transformer is None:
+        _default_transformer = Transformer()
+    return _default_transformer
+
+
+def set_transformer(transformer_instance: Transformer) -> None:
+    """Set a custom transformer instance (useful for testing)."""
+    global _default_transformer
+    _default_transformer = transformer_instance
+
+
+def reset_transformer() -> None:
+    """Reset the transformer to create a new instance on next get_transformer() call."""
+    global _default_transformer
+    _default_transformer = None
+
+
+class _DefaultTransformerProxy:
+    """Proxy to maintain backward compatibility with global transformer usage."""
+    def __getattr__(self, name: str):
+        return getattr(get_transformer(), name)
+
+
+transformer = _DefaultTransformerProxy()

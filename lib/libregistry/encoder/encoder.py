@@ -1,15 +1,21 @@
 import os
+import logging
 import importlib
 from typing import Dict, Any, List, Optional
 from .base import FileTypeEncoder
+
+logger = logging.getLogger(__name__)
 
 
 class Encoder:
     """Main encoder class that handles file type encoding and validation"""
 
-    def __init__(self):
-        self.filetypes: Dict[str, FileTypeEncoder] = {}
-        self._load_filetypes()
+    def __init__(self, filetypes: Optional[Dict[str, FileTypeEncoder]] = None):
+        if filetypes is not None:
+            self.filetypes = filetypes
+        else:
+            self.filetypes: Dict[str, FileTypeEncoder] = {}
+            self._load_filetypes()
 
     def _load_filetypes(self):
         """Dynamically load all filetype encoders"""
@@ -34,7 +40,7 @@ class Encoder:
                         self.filetypes[item] = encoder_instance
 
                 except ImportError as e:
-                    print(f"Warning: Could not load filetype encoder for {item}: {e}")
+                    logger.warning("Could not load filetype encoder for %s: %s", item, e)
 
     def get_filetype_encoder(self, filetype: str) -> Optional[FileTypeEncoder]:
         """Get an encoder for the specified filetype"""
@@ -66,5 +72,33 @@ class Encoder:
         return list(self.filetypes.keys())
 
 
-# Global encoder instance
-encoder = Encoder()
+_default_encoder: Optional[Encoder] = None
+
+
+def get_encoder() -> Encoder:
+    """Get the global encoder instance (factory method for testability)."""
+    global _default_encoder
+    if _default_encoder is None:
+        _default_encoder = Encoder()
+    return _default_encoder
+
+
+def set_encoder(encoder_instance: Encoder) -> None:
+    """Set a custom encoder instance (useful for testing)."""
+    global _default_encoder
+    _default_encoder = encoder_instance
+
+
+def reset_encoder() -> None:
+    """Reset the encoder to create a new instance on next get_encoder() call."""
+    global _default_encoder
+    _default_encoder = None
+
+
+class _DefaultEncoderProxy:
+    """Proxy to maintain backward compatibility with global encoder usage."""
+    def __getattr__(self, name: str):
+        return getattr(get_encoder(), name)
+
+
+encoder = _DefaultEncoderProxy()

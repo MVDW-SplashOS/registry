@@ -48,7 +48,7 @@ def generate_test_data(depth=0, max_depth=3):
     """Generate nested test data for testing."""
     if depth >= max_depth:
         return "value"
-    
+
     return {
         f"level_{depth}_key": generate_test_data(depth + 1, max_depth),
         f"level_{depth}_list": [1, 2, 3] if depth < max_depth - 1 else []
