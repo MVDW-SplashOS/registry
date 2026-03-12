@@ -36,9 +36,11 @@ class IniDecoder(FileTypeDecoder):
                     config.add_section(section_name)
                     for key, value in section_data.items():
                         if isinstance(value, bool):
-                            config.set(section_name, key, 'yes' if value else 'no')
+                            config.set(section_name, key, "yes" if value else "no")
                         elif isinstance(value, list):
-                            config.set(section_name, key, " ".join(str(v) for v in value))
+                            config.set(
+                                section_name, key, " ".join(str(v) for v in value)
+                            )
                         else:
                             config.set(section_name, key, str(value))
 
@@ -68,8 +70,13 @@ class IniDecoder(FileTypeDecoder):
                         errors.append(f"Unknown option in {section_name}: {key}")
 
                 for option_name, option_def in options.items():
-                    if option_def.get("required", False) and option_name not in section_data:
-                        errors.append(f"Required option missing in {section_name}: {option_name}")
+                    if (
+                        option_def.get("required", False)
+                        and option_name not in section_data
+                    ):
+                        errors.append(
+                            f"Required option missing in {section_name}: {option_name}"
+                        )
 
         return errors
 

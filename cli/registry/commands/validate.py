@@ -23,10 +23,14 @@ class ValidateCommand(Command):
             for package, configs in packages.items():
                 for config_path, value in configs.items():
                     try:
-                        structure = self.core.get_config_structure(category, package, config_path)
+                        structure = self.core.get_config_structure(
+                            category, package, config_path
+                        )
                         config_file = self.core.get_config_file_path(structure)
 
-                        format_type = structure.get("file", {}).get("format", "key-value")
+                        format_type = structure.get("file", {}).get(
+                            "format", "key-value"
+                        )
                         encoding_structure = {
                             "format": format_type,
                             "syntax": structure.get("syntax", {}),
@@ -35,7 +39,9 @@ class ValidateCommand(Command):
 
                         current_config = {}
                         if config_file.exists():
-                            current_config = decoder.decode_file(str(config_file), structure)
+                            current_config = decoder.decode_file(
+                                str(config_file), structure
+                            )
 
                         path_parts = config_path.split("/")
                         if len(path_parts) == 1:
@@ -53,9 +59,14 @@ class ValidateCommand(Command):
 
                         filetype_decoder = decoder.get_filetype_decoder(format_type)
                         if filetype_decoder:
-                            validation_errors = filetype_decoder.validate(current_config, encoding_structure)
+                            validation_errors = filetype_decoder.validate(
+                                current_config, encoding_structure
+                            )
                             if validation_errors:
-                                errors.append(f"{category}/{package}/{config_path}: " + "; ".join(validation_errors))
+                                errors.append(
+                                    f"{category}/{package}/{config_path}: "
+                                    + "; ".join(validation_errors)
+                                )
                             else:
                                 valid_count += 1
                         else:
@@ -80,7 +91,9 @@ class ValidateConfigCommand(Command):
     @classmethod
     def _add_arguments(cls, parser):
         parser.add_argument("path", help="Configuration path (category/package/config)")
-        parser.add_argument("--strict", action="store_true", help="Enable strict validation")
+        parser.add_argument(
+            "--strict", action="store_true", help="Enable strict validation"
+        )
 
     def execute(self, args: Any) -> None:
         try:
@@ -115,7 +128,9 @@ class ValidateConfigCommand(Command):
 
             filetype_decoder = decoder.get_filetype_decoder(format_type)
             if filetype_decoder:
-                validation_errors = filetype_decoder.validate(current_config, encoding_structure)
+                validation_errors = filetype_decoder.validate(
+                    current_config, encoding_structure
+                )
                 if validation_errors:
                     print(f"Validation FAILED ({len(validation_errors)} error(s)):")
                     for error in validation_errors:
@@ -130,5 +145,6 @@ class ValidateConfigCommand(Command):
             print(f"Error validating config: {e}")
             if self.verbose:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)

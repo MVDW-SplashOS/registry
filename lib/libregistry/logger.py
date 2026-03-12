@@ -3,8 +3,8 @@ import sys
 
 logging.basicConfig(
     level=logging.WARNING,
-    format='[LibRegistry] %(levelname)s: %(message)s',
-    stream=sys.stderr
+    format="[LibRegistry] %(levelname)s: %(message)s",
+    stream=sys.stderr,
 )
 
 

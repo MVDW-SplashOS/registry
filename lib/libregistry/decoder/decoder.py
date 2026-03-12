@@ -41,7 +41,9 @@ class Decoder:
                         self.filetypes[item] = decoder_instance
 
                 except ImportError as e:
-                    logger.warning("Could not load filetype decoder for %s: %s", item, e)
+                    logger.warning(
+                        "Could not load filetype decoder for %s: %s", item, e
+                    )
 
     def get_filetype_decoder(self, filetype: str) -> Optional[FileTypeDecoder]:
         """Get a decoder for the specified filetype"""
@@ -138,6 +140,7 @@ def reset_decoder() -> None:
 
 class _DefaultDecoderProxy:
     """Proxy to maintain backward compatibility with global decoder usage."""
+
     def __getattr__(self, name: str):
         return getattr(get_decoder(), name)
 

@@ -17,7 +17,11 @@ class BackupListCommand(Command):
             print("No backups found")
             return
 
-        backups = sorted(self.core.backup_dir.glob("*.bak"), key=lambda p: p.stat().st_mtime, reverse=True)
+        backups = sorted(
+            self.core.backup_dir.glob("*.bak"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
 
         if not backups:
             print("No backups found")
@@ -27,7 +31,9 @@ class BackupListCommand(Command):
         print("=" * 60)
         for backup in backups:
             mtime = backup.stat().st_mtime
-            timestamp = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+            timestamp = datetime.datetime.fromtimestamp(mtime).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
             print(f"  {backup.name}")
             print(f"    Created: {timestamp}")
             print(f"    Path: {backup}")
@@ -61,7 +67,9 @@ class BackupRestoreCommand(Command):
         if not original_path:
             print(f"Could not determine original location for: {backup_path.stem}")
             print(f"Backup file: {backup_path}")
-            user_input = input("Enter original file path (or press Enter to cancel): ").strip()
+            user_input = input(
+                "Enter original file path (or press Enter to cancel): "
+            ).strip()
             if user_input:
                 original_path = Path(user_input)
             else:
@@ -79,6 +87,7 @@ class BackupRestoreCommand(Command):
             print(f"Error restoring backup: {e}")
             if self.verbose:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)
 
@@ -98,8 +107,13 @@ class BackupRestoreCommand(Command):
                                         manifest = yaml.safe_load(f)
                                     structures = manifest.get("structure", {})
                                     for struct_name, struct_file in structures.items():
-                                        if struct_name == original_name or struct_file == original_name:
-                                            struct_path = pkg_dir / f"{struct_file}.yaml"
+                                        if (
+                                            struct_name == original_name
+                                            or struct_file == original_name
+                                        ):
+                                            struct_path = (
+                                                pkg_dir / f"{struct_file}.yaml"
+                                            )
                                             if not struct_path.exists():
                                                 struct_path = pkg_dir / struct_file
                                             if struct_path.exists():

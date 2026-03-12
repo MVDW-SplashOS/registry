@@ -2,7 +2,7 @@ import sys
 import json
 import yaml
 import datetime
-from typing import Any, Optional
+from typing import Any
 
 from .base import Command
 
@@ -14,7 +14,9 @@ class ExportCommand(Command):
     @classmethod
     def _add_arguments(cls, parser):
         parser.add_argument("--file", "-f", help="Output file path")
-        parser.add_argument("--format", choices=["yaml", "json"], default="yaml", help="Export format")
+        parser.add_argument(
+            "--format", choices=["yaml", "json"], default="yaml", help="Export format"
+        )
 
     def execute(self, args: Any) -> None:
         try:
@@ -23,11 +25,13 @@ class ExportCommand(Command):
 
             if self.core.backup_dir.exists():
                 for backup in self.core.backup_dir.glob("*.bak"):
-                    backups.append({
-                        "name": backup.name,
-                        "path": str(backup),
-                        "timestamp": backup.stat().st_mtime,
-                    })
+                    backups.append(
+                        {
+                            "name": backup.name,
+                            "path": str(backup),
+                            "timestamp": backup.stat().st_mtime,
+                        }
+                    )
 
             export_data = {
                 "version": "1.0",
@@ -36,7 +40,7 @@ class ExportCommand(Command):
                 "metadata": {
                     "exported_at": str(datetime.datetime.now()),
                     "version": "0.1.0",
-                }
+                },
             }
 
             if args.format == "json":
@@ -55,6 +59,7 @@ class ExportCommand(Command):
             print(f"Error exporting: {e}")
             if self.verbose:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)
 
@@ -66,7 +71,9 @@ class ImportCommand(Command):
     @classmethod
     def _add_arguments(cls, parser):
         parser.add_argument("file", help="Import file path")
-        parser.add_argument("--merge", "-m", action="store_true", help="Merge with existing changes")
+        parser.add_argument(
+            "--merge", "-m", action="store_true", help="Merge with existing changes"
+        )
 
     def execute(self, args: Any) -> None:
         try:
@@ -103,5 +110,6 @@ class ImportCommand(Command):
             print(f"Error importing: {e}")
             if self.verbose:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)

@@ -390,6 +390,7 @@ def reset_transformer() -> None:
 
 class _DefaultTransformerProxy:
     """Proxy to maintain backward compatibility with global transformer usage."""
+
     def __getattr__(self, name: str):
         return getattr(get_transformer(), name)
 

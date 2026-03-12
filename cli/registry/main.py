@@ -15,92 +15,124 @@ class RegistryCLI:
         self._core = _RegistryCore(verbose=verbose)
 
     def __getattr__(self, name):
-        if name in ('changes_file', 'backup_dir'):
+        if name in ("changes_file", "backup_dir"):
             return getattr(self._core, name)
-        if name == '_parse_path':
+        if name == "_parse_path":
             return self._core.parse_path
-        if name == 'parse_path':
+        if name == "parse_path":
             return self._core.parse_path
-        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+        raise AttributeError(
+            f"'{type(self).__name__}' object has no attribute '{name}'"
+        )
 
     def __setattr__(self, name, value):
-        if name in ('changes_file', 'backup_dir'):
+        if name in ("changes_file", "backup_dir"):
             object.__setattr__(self._core, name, value)
         else:
             object.__setattr__(self, name, value)
 
     def set_command(self, path: str, value: str):
         from .commands import SetCommand
+
         cmd = SetCommand(self._core)
-        cmd.execute(type('Args', (), {'path': path, 'value': value})())
+        cmd.execute(type("Args", (), {"path": path, "value": value})())
 
     def apply_command(self):
         from .commands import ApplyCommand
-        ApplyCommand(self._core).execute(type('Args', (), {})())
+
+        ApplyCommand(self._core).execute(type("Args", (), {})())
 
     def discard_command(self):
         from .commands import DiscardCommand
-        DiscardCommand(self._core).execute(type('Args', (), {})())
+
+        DiscardCommand(self._core).execute(type("Args", (), {})())
 
     def reset_command(self, path: str):
         from .commands import ResetCommand
-        ResetCommand(self._core).execute(type('Args', (), {'path': path})())
+
+        ResetCommand(self._core).execute(type("Args", (), {"path": path})())
 
     def view_changes_command(self):
         from .commands import ViewChangesCommand
-        ViewChangesCommand(self._core).execute(type('Args', (), {})())
+
+        ViewChangesCommand(self._core).execute(type("Args", (), {})())
 
     def get_command(self, path: str):
         from .commands import GetCommand
-        GetCommand(self._core).execute(type('Args', (), {'path': path})())
+
+        GetCommand(self._core).execute(type("Args", (), {"path": path})())
 
     def diff_command(self):
         from .commands import DiffCommand
-        DiffCommand(self._core).execute(type('Args', (), {})())
+
+        DiffCommand(self._core).execute(type("Args", (), {})())
 
     def validate_command(self):
         from .commands import ValidateCommand
-        ValidateCommand(self._core).execute(type('Args', (), {})())
+
+        ValidateCommand(self._core).execute(type("Args", (), {})())
 
     def validate_config_command(self, path: str, strict: bool = False):
         from .commands import ValidateConfigCommand
-        ValidateConfigCommand(self._core).execute(type('Args', (), {'path': path, 'strict': strict})())
+
+        ValidateConfigCommand(self._core).execute(
+            type("Args", (), {"path": path, "strict": strict})()
+        )
 
     def list_command(self, category: str = None, detected_only: bool = False):
         from .commands import ListCommand
-        ListCommand(self._core).execute(type('Args', (), {'category': category, 'detected': detected_only})())
+
+        ListCommand(self._core).execute(
+            type("Args", (), {"category": category, "detected": detected_only})()
+        )
 
     def search_command(self, query: str):
         from .commands import SearchCommand
-        SearchCommand(self._core).execute(type('Args', (), {'query': query})())
+
+        SearchCommand(self._core).execute(type("Args", (), {"query": query})())
 
     def info_command(self, package: str):
         from .commands import InfoCommand
-        InfoCommand(self._core).execute(type('Args', (), {'package': package})())
+
+        InfoCommand(self._core).execute(type("Args", (), {"package": package})())
 
     def detect_command(self, package: str = None):
         from .commands import DetectCommand
-        DetectCommand(self._core).execute(type('Args', (), {'package': package})())
+
+        DetectCommand(self._core).execute(type("Args", (), {"package": package})())
 
     def export_command(self, file_path: str = None, format: str = "yaml"):
         from .commands import ExportCommand
-        ExportCommand(self._core).execute(type('Args', (), {'file': file_path, 'format': format})())
+
+        ExportCommand(self._core).execute(
+            type("Args", (), {"file": file_path, "format": format})()
+        )
 
     def import_command(self, file_path: str, merge: bool = False):
         from .commands import ImportCommand
-        ImportCommand(self._core).execute(type('Args', (), {'file': file_path, 'merge': merge})())
+
+        ImportCommand(self._core).execute(
+            type("Args", (), {"file": file_path, "merge": merge})()
+        )
 
     def backup_list_command(self):
         from .commands import BackupListCommand
-        BackupListCommand(self._core).execute(type('Args', (), {})())
+
+        BackupListCommand(self._core).execute(type("Args", (), {})())
 
     def backup_restore_command(self, backup_name: str):
         from .commands import BackupRestoreCommand
-        BackupRestoreCommand(self._core).execute(type('Args', (), {'backup_name': backup_name})())
+
+        BackupRestoreCommand(self._core).execute(
+            type("Args", (), {"backup_name": backup_name})()
+        )
 
     def backup_delete_command(self, backup_name: str):
         from .commands import BackupDeleteCommand
-        BackupDeleteCommand(self._core).execute(type('Args', (), {'backup_name': backup_name})())
+
+        BackupDeleteCommand(self._core).execute(
+            type("Args", (), {"backup_name": backup_name})()
+        )
 
     def _ensure_directories(self):
         pass
@@ -154,9 +186,7 @@ Examples:
     )
 
     parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable verbose output"
+        "-v", "--verbose", action="store_true", help="Enable verbose output"
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Command to execute")
@@ -183,8 +213,12 @@ Examples:
         cmd_class.add_parser(subparsers)
 
     backup_subparsers = subparsers.add_parser("backup", help="Backup operations")
-    backup_subparsers.add_argument("action", choices=["list", "restore", "delete"], help="Backup action")
-    backup_subparsers.add_argument("backup_name", nargs="?", help="Backup name (for restore/delete)")
+    backup_subparsers.add_argument(
+        "action", choices=["list", "restore", "delete"], help="Backup action"
+    )
+    backup_subparsers.add_argument(
+        "backup_name", nargs="?", help="Backup name (for restore/delete)"
+    )
 
     args = parser.parse_args()
 

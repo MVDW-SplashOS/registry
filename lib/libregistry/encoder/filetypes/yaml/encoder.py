@@ -8,8 +8,15 @@ class YamlEncoder(FileTypeEncoder):
 
     def encode(self, data: Dict[str, Any], structure: Dict[str, Any]) -> str:
         """Encode data to YAML format"""
-        default_flow_style = structure.get("formatting", {}).get("default_flow_style", False)
-        return yaml.dump(data, default_flow_style=default_flow_style, sort_keys=False, allow_unicode=True)
+        default_flow_style = structure.get("formatting", {}).get(
+            "default_flow_style", False
+        )
+        return yaml.dump(
+            data,
+            default_flow_style=default_flow_style,
+            sort_keys=False,
+            allow_unicode=True,
+        )
 
     def validate_structure(
         self, data: Dict[str, Any], structure: Dict[str, Any]
@@ -33,7 +40,10 @@ class YamlEncoder(FileTypeEncoder):
                         errors.append(f"Unknown option in {section_name}: {key}")
 
                 for option_name, option_def in options.items():
-                    if option_def.get("required", False) and option_name not in section_data:
+                    if (
+                        option_def.get("required", False)
+                        and option_name not in section_data
+                    ):
                         errors.append(
                             f"Required option missing in {section_name}: {option_name}"
                         )

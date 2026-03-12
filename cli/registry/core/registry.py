@@ -1,20 +1,15 @@
 import os
 import sys
-import shutil
 import tempfile
 import yaml
 import re
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from libregistry import (
     RegistrySession,
-    decoder,
-    encoder,
-    File,
     get_main_definition,
     get_package_definition,
-    RegistryError,
 )
 
 
@@ -60,9 +55,7 @@ class RegistryCore:
         try:
             changes_file_dir = self.changes_file.parent
             fd, tmp_path = tempfile.mkstemp(
-                dir=changes_file_dir,
-                prefix=".changes_",
-                suffix=".tmp"
+                dir=changes_file_dir, prefix=".changes_", suffix=".tmp"
             )
             try:
                 with os.fdopen(fd, "w") as f:
@@ -91,26 +84,37 @@ class RegistryCore:
         category = parts[0]
         package = parts[1]
         config_path = "/".join(parts[2:])
-        if not re.match(r'^[a-zA-Z0-9_\-\.]+$', category):
+        if not re.match(r"^[a-zA-Z0-9_\-\.]+$", category):
             raise ValueError(f"Invalid category name: {category}")
-        if not re.match(r'^[a-zA-Z0-9_\-\.]+$', package):
+        if not re.match(r"^[a-zA-Z0-9_\-\.]+$", package):
             raise ValueError(f"Invalid package name: {package}")
         return category, package, config_path
 
-    def get_config_structure(self, category: str, package: str, config_path: str) -> Dict[str, Any]:
+    def get_config_structure(
+        self, category: str, package: str, config_path: str
+    ) -> Dict[str, Any]:
         main_def = get_main_definition()
         pkg_def = get_package_definition(main_def, category, package)
         if not pkg_def:
             raise ValueError(f"Package not found: {category}/{package}")
         structures = pkg_def.get("structure", {})
-        base_config_path = config_path.split("/")[0] if "/" in config_path else config_path
+        base_config_path = (
+            config_path.split("/")[0] if "/" in config_path else config_path
+        )
         for struct_name, struct_file in structures.items():
             if struct_name == base_config_path or struct_file == base_config_path:
-                struct_path = Path("/etc/registry/definitions") / category / package / struct_file
+                struct_path = (
+                    Path("/etc/registry/definitions") / category / package / struct_file
+                )
                 if struct_path.exists():
                     with open(struct_path, "r") as f:
                         return yaml.safe_load(f)
-        struct_path = Path("/etc/registry/definitions") / category / package / f"{base_config_path}.yaml"
+        struct_path = (
+            Path("/etc/registry/definitions")
+            / category
+            / package
+            / f"{base_config_path}.yaml"
+        )
         if struct_path.exists():
             with open(struct_path, "r") as f:
                 return yaml.safe_load(f)
@@ -150,14 +154,20 @@ class RegistryCore:
             for package, configs in packages.items():
                 for config_path, value in configs.items():
                     try:
-                        structure = self.get_config_structure(category, package, config_path)
+                        structure = self.get_config_structure(
+                            category, package, config_path
+                        )
                         config_file = self.get_config_file_path(structure)
                         if config_file.exists():
                             if not os.access(config_file, os.W_OK):
-                                permission_issues.append(f"{category}/{package}/{config_path}")
+                                permission_issues.append(
+                                    f"{category}/{package}/{config_path}"
+                                )
                         else:
                             if not os.access(config_file.parent, os.W_OK):
-                                permission_issues.append(f"{category}/{package}/{config_path}")
+                                permission_issues.append(
+                                    f"{category}/{package}/{config_path}"
+                                )
                     except Exception:
                         permission_issues.append(f"{category}/{package}/{config_path}")
         return permission_issues

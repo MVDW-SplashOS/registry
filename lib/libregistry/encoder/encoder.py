@@ -40,7 +40,9 @@ class Encoder:
                         self.filetypes[item] = encoder_instance
 
                 except ImportError as e:
-                    logger.warning("Could not load filetype encoder for %s: %s", item, e)
+                    logger.warning(
+                        "Could not load filetype encoder for %s: %s", item, e
+                    )
 
     def get_filetype_encoder(self, filetype: str) -> Optional[FileTypeEncoder]:
         """Get an encoder for the specified filetype"""
@@ -97,6 +99,7 @@ def reset_encoder() -> None:
 
 class _DefaultEncoderProxy:
     """Proxy to maintain backward compatibility with global encoder usage."""
+
     def __getattr__(self, name: str):
         return getattr(get_encoder(), name)
 

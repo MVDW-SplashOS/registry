@@ -1,4 +1,3 @@
-import sys
 from typing import Any
 
 from .base import Command
@@ -23,6 +22,7 @@ class ApplyCommand(Command):
             print("\nThese changes require elevated privileges.")
             print("Please run the following command to apply them:")
             import shutil
+
             registry_path = shutil.which("registry") or "registry"
             print(f"  sudo {registry_path} apply")
             print("\nOr press Ctrl+C to cancel.")
@@ -36,7 +36,9 @@ class ApplyCommand(Command):
             for package, configs in packages.items():
                 for config_path, value in configs.items():
                     try:
-                        backup_info = self._apply_single_change(category, package, config_path, value)
+                        backup_info = self._apply_single_change(
+                            category, package, config_path, value
+                        )
                         if backup_info:
                             applied_count += 1
                             backups.append(backup_info)
@@ -46,12 +48,13 @@ class ApplyCommand(Command):
                         print(f"Error applying {category}/{package}/{config_path}: {e}")
                         if self.verbose:
                             import traceback
+
                             traceback.print_exc()
                         failed_count += 1
 
         if failed_count > 0:
             print(f"\nWarning: {failed_count} change(s) failed")
-            if backups and input("Rollback changes? (y/n): ").lower() == 'y':
+            if backups and input("Rollback changes? (y/n): ").lower() == "y":
                 self._rollback_changes(backups)
                 print("Rollback complete")
                 return
@@ -69,15 +72,19 @@ class ApplyCommand(Command):
             try:
                 if backup_path.exists():
                     import shutil
+
                     shutil.copy2(backup_path, config_file)
                     if self.verbose:
                         print(f"Rolled back: {config_file}")
             except Exception as e:
                 print(f"Failed to rollback {config_file}: {e}")
 
-    def _apply_single_change(self, category: str, package: str, config_path: str, value: Any) -> dict:
+    def _apply_single_change(
+        self, category: str, package: str, config_path: str, value: Any
+    ) -> dict:
         import os
         import shutil
+
         backup_info = None
         try:
             structure = self.core.get_config_structure(category, package, config_path)
@@ -85,13 +92,21 @@ class ApplyCommand(Command):
 
             if config_file.exists() and os.access(config_file.parent, os.W_OK):
                 import os as _os
-                backup_path = self.core.backup_dir / f"{config_file.name}.{_os.getpid()}.bak"
+
+                backup_path = (
+                    self.core.backup_dir / f"{config_file.name}.{_os.getpid()}.bak"
+                )
                 try:
                     shutil.copy2(config_file, backup_path)
-                    backup_info = {"config_file": config_file, "backup_path": backup_path}
+                    backup_info = {
+                        "config_file": config_file,
+                        "backup_path": backup_path,
+                    }
                 except (PermissionError, OSError) as e:
                     if self.verbose:
-                        print(f"Warning: Could not create backup for {config_file}: {e}")
+                        print(
+                            f"Warning: Could not create backup for {config_file}: {e}"
+                        )
 
             if config_file.exists():
                 current_config = decoder.decode_file(str(config_file), structure)
@@ -129,6 +144,7 @@ class ApplyCommand(Command):
             print(f"Failed to apply {category}/{package}/{config_path}: {e}")
             if self.verbose:
                 import traceback
+
                 traceback.print_exc()
             return {}
 
@@ -143,7 +159,11 @@ class DiscardCommand(Command):
             print("No changes to discard")
             return
 
-        change_count = sum(len(configs) for packages in changes.values() for configs in packages.values())
+        change_count = sum(
+            len(configs)
+            for packages in changes.values()
+            for configs in packages.values()
+        )
         self.core.save_changes({})
         print(f"Discarded {change_count} pending change(s)")
 
@@ -167,7 +187,11 @@ class ViewChangesCommand(Command):
                 for config_path, value in configs.items():
                     print(f"    {config_path} = {value}")
         print("-" * 50)
-        total_changes = sum(len(configs) for packages in changes.values() for configs in packages.values())
+        total_changes = sum(
+            len(configs)
+            for packages in changes.values()
+            for configs in packages.values()
+        )
         print(f"Total: {total_changes} change(s) pending")
 
 
@@ -187,14 +211,18 @@ class DiffCommand(Command):
             for package, configs in packages.items():
                 for config_path, new_value in configs.items():
                     try:
-                        structure = self.core.get_config_structure(category, package, config_path)
+                        structure = self.core.get_config_structure(
+                            category, package, config_path
+                        )
                         config_file = self.core.get_config_file_path(structure)
 
                         print(f"\n{category}/{package}/{config_path}:")
                         print(f"  Config file: {config_file}")
 
                         if config_file.exists():
-                            current_config = decoder.decode_file(str(config_file), structure)
+                            current_config = decoder.decode_file(
+                                str(config_file), structure
+                            )
                             path_parts = config_path.split("/")
                             old_value = current_config
                             for part in path_parts:

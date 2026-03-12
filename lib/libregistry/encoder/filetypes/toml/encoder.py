@@ -2,6 +2,7 @@ from typing import Dict, Any, List
 
 try:
     import tomli_w
+
     HAS_TOMLI_W = True
 except ImportError:
     HAS_TOMLI_W = False
@@ -33,7 +34,9 @@ class TomlEncoder(FileTypeEncoder):
                 for subkey, subvalue in value.items():
                     formatted_key = self._format_key(subkey)
                     if isinstance(subvalue, bool):
-                        lines.append(f"{formatted_key} = {'true' if subvalue else 'false'}")
+                        lines.append(
+                            f"{formatted_key} = {'true' if subvalue else 'false'}"
+                        )
                     elif isinstance(subvalue, int):
                         lines.append(f"{formatted_key} = {subvalue}")
                     elif isinstance(subvalue, float):
@@ -42,7 +45,7 @@ class TomlEncoder(FileTypeEncoder):
                         list_str = ", ".join(f'"{str(v)}"' for v in subvalue)
                         lines.append(f"{formatted_key} = [{list_str}]")
                     elif subvalue is None:
-                        lines.append(f"{formatted_key} = \"\"")
+                        lines.append(f'{formatted_key} = ""')
                     else:
                         lines.append(f'{formatted_key} = "{subvalue}"')
             else:
@@ -57,7 +60,7 @@ class TomlEncoder(FileTypeEncoder):
                     list_str = ", ".join(f'"{str(v)}"' for v in value)
                     lines.append(f"{formatted_key} = [{list_str}]")
                 elif value is None:
-                    lines.append(f"{formatted_key} = \"\"")
+                    lines.append(f'{formatted_key} = ""')
                 else:
                     lines.append(f'{formatted_key} = "{value}"')
 
@@ -91,8 +94,13 @@ class TomlEncoder(FileTypeEncoder):
                         errors.append(f"Unknown option in {section_name}: {key}")
 
                 for option_name, option_def in options.items():
-                    if option_def.get("required", False) and option_name not in section_data:
-                        errors.append(f"Required option missing in {section_name}: {option_name}")
+                    if (
+                        option_def.get("required", False)
+                        and option_name not in section_data
+                    ):
+                        errors.append(
+                            f"Required option missing in {section_name}: {option_name}"
+                        )
 
         return errors
 

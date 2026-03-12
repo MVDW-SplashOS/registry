@@ -1,4 +1,21 @@
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix, --ignore=E402]
+        files: \.(py)$
+        types: [python]
+        exclude: ^tests/
+
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        files: \.(py)$
+        types: [python]
+        exclude: ^tests/
+
   - repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:

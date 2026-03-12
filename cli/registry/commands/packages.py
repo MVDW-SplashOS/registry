@@ -1,7 +1,7 @@
 import sys
 import yaml
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from .base import Command
 
@@ -13,7 +13,9 @@ class ListCommand(Command):
     @classmethod
     def _add_arguments(cls, parser):
         parser.add_argument("category", nargs="?", help="Category to list (optional)")
-        parser.add_argument("--detected", "-d", action="store_true", help="Show only detected packages")
+        parser.add_argument(
+            "--detected", "-d", action="store_true", help="Show only detected packages"
+        )
 
     def execute(self, args: Any) -> None:
         try:
@@ -33,14 +35,19 @@ class ListCommand(Command):
 
                         cat_packages = []
                         for pkg_dir in sorted(cat_dir.iterdir()):
-                            if pkg_dir.is_dir() and (pkg_dir / "manifest.yaml").exists():
+                            if (
+                                pkg_dir.is_dir()
+                                and (pkg_dir / "manifest.yaml").exists()
+                            ):
                                 manifest_path = pkg_dir / "manifest.yaml"
                                 with open(manifest_path) as f:
                                     manifest = yaml.safe_load(f)
 
                                 pkg_info = {
                                     "name": pkg_dir.name,
-                                    "version": manifest.get("application", {}).get("version", "unknown"),
+                                    "version": manifest.get("application", {}).get(
+                                        "version", "unknown"
+                                    ),
                                     "detected": False,
                                 }
 
@@ -48,7 +55,9 @@ class ListCommand(Command):
                                     cat_packages.append(pkg_info)
                                 else:
                                     detect_paths = manifest.get("detect_installed", [])
-                                    is_installed = any(Path(p).exists() for p in detect_paths)
+                                    is_installed = any(
+                                        Path(p).exists() for p in detect_paths
+                                    )
                                     if is_installed:
                                         pkg_info["detected"] = True
                                         cat_packages.append(pkg_info)
@@ -61,7 +70,9 @@ class ListCommand(Command):
                 print(f"Packages in '{category}':")
                 if category in packages:
                     for pkg in packages[category]:
-                        status = " [installed]" if detected_only and pkg["detected"] else ""
+                        status = (
+                            " [installed]" if detected_only and pkg["detected"] else ""
+                        )
                         print(f"  - {pkg['name']} (v{pkg['version']}){status}")
                 else:
                     print("  No packages found")
@@ -79,6 +90,7 @@ class ListCommand(Command):
             print(f"Error listing packages: {e}")
             if self.verbose:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)
 
@@ -102,27 +114,40 @@ class SearchCommand(Command):
                 for cat_dir in definitions_dir.iterdir():
                     if cat_dir.is_dir() and not cat_dir.name.startswith("."):
                         for pkg_dir in cat_dir.iterdir():
-                            if pkg_dir.is_dir() and (pkg_dir / "manifest.yaml").exists():
+                            if (
+                                pkg_dir.is_dir()
+                                and (pkg_dir / "manifest.yaml").exists()
+                            ):
                                 manifest_path = pkg_dir / "manifest.yaml"
                                 with open(manifest_path) as f:
                                     manifest = yaml.safe_load(f)
 
                                 pkg_name = pkg_dir.name
-                                app_name = manifest.get("application", {}).get("name", "").lower()
+                                app_name = (
+                                    manifest.get("application", {})
+                                    .get("name", "")
+                                    .lower()
+                                )
                                 query_lower = query.lower()
 
                                 if query_lower in pkg_name or query_lower in app_name:
-                                    results.append({
-                                        "category": cat_dir.name,
-                                        "name": pkg_name,
-                                        "version": manifest.get("application", {}).get("version", "unknown"),
-                                    })
+                                    results.append(
+                                        {
+                                            "category": cat_dir.name,
+                                            "name": pkg_name,
+                                            "version": manifest.get(
+                                                "application", {}
+                                            ).get("version", "unknown"),
+                                        }
+                                    )
 
             if results:
                 print(f"Search results for '{query}':")
                 print("=" * 50)
                 for result in results:
-                    print(f"  {result['category']}/{result['name']} (v{result['version']})")
+                    print(
+                        f"  {result['category']}/{result['name']} (v{result['version']})"
+                    )
                 print("=" * 50)
             else:
                 print(f"No results found for '{query}'")
@@ -167,8 +192,12 @@ class InfoCommand(Command):
             print(f"Package: {pkg_name}")
             print("=" * 50)
             print(f"Category: {category}")
-            print(f"Version: {manifest.get('application', {}).get('version', 'unknown')}")
-            print(f"Definition version: {manifest.get('definition', {}).get('libregistry_minimum_version', 'unknown')}")
+            print(
+                f"Version: {manifest.get('application', {}).get('version', 'unknown')}"
+            )
+            print(
+                f"Definition version: {manifest.get('definition', {}).get('libregistry_minimum_version', 'unknown')}"
+            )
 
             structures = manifest.get("structure", {})
             if structures:
@@ -210,4 +239,6 @@ class DetectCommand(Command):
 
     def execute(self, args: Any) -> None:
         list_cmd = ListCommand(self.core)
-        list_cmd.execute(type('Args', (), {'category': args.package, 'detected': True})())
+        list_cmd.execute(
+            type("Args", (), {"category": args.package, "detected": True})()
+        )

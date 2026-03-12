@@ -11,7 +11,9 @@ class SetCommand(Command):
 
     @classmethod
     def _add_arguments(cls, parser):
-        parser.add_argument("path", help="Configuration path (category/package/config/option)")
+        parser.add_argument(
+            "path", help="Configuration path (category/package/config/option)"
+        )
         parser.add_argument("value", help="Value to set")
 
     def execute(self, args: Any) -> None:
@@ -46,6 +48,7 @@ class SetCommand(Command):
             print(f"Error setting value: {e}")
             if self.verbose:
                 import traceback
+
                 traceback.print_exc()
             sys.exit(1)
 
@@ -56,7 +59,9 @@ class GetCommand(Command):
 
     @classmethod
     def _add_arguments(cls, parser):
-        parser.add_argument("path", help="Configuration path (category/package/config/option)")
+        parser.add_argument(
+            "path", help="Configuration path (category/package/config/option)"
+        )
 
     def execute(self, args: Any) -> None:
         try:
@@ -103,7 +108,11 @@ class ResetCommand(Command):
 
             changes = self.core.load_changes()
 
-            if category in changes and package in changes[category] and config_path in changes[category][package]:
+            if (
+                category in changes
+                and package in changes[category]
+                and config_path in changes[category][package]
+            ):
                 del changes[category][package][config_path]
 
                 if not changes[category][package]:
