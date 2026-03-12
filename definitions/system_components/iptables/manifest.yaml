@@ -1,0 +1,14 @@
+manifest_scheme_revision: 1
+application:
+    name: iptables
+    version: 1.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    rules_v4: rules.v4
+
+detect_installed:
+    - /etc/iptables/rules.v4
+    - /etc/iptables/rules.v6
+    - /usr/sbin/iptables

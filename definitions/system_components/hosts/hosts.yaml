@@ -1,0 +1,31 @@
+file:
+    location: /etc/hosts
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: ""
+    case_sensitive: true
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            ip_address:
+                type: string
+                default: ""
+                description: IP address
+
+            hostname:
+                type: string
+                default: ""
+                description: Hostname
+
+            aliases:
+                type: string
+                default: ""
+                description: Host aliases

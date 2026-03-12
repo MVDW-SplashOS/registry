@@ -1,0 +1,71 @@
+file:
+    location: /etc/dhcp/dhclient.conf
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: ";"
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            timeout:
+                type: integer
+                default: 60
+                description: Timeout in seconds
+
+            retry:
+                type: integer
+                default: 60
+                description: Retry interval
+
+            select-timeout:
+                type: integer
+                default: 0
+                description: Select timeout
+
+            reboot:
+                type: integer
+                default: 10
+                description: Reboot timeout
+
+            backoff-cutoff:
+                type: integer
+                default: 120
+                description: Backoff cutoff
+
+            initial-interval:
+                type: integer
+                default: 3
+                description: Initial interval
+
+            send:
+                type: string
+                default: ""
+                description: DHCP option to send
+
+            request:
+                type: string
+                default: ""
+                description: Options to request
+
+            require:
+                type: string
+                default: ""
+                description: Required options
+
+            script:
+                type: string
+                default: ""
+                description: Path to client script
+
+            interface:
+                type: string
+                default: ""
+                description: Interface configuration

@@ -1,0 +1,61 @@
+file:
+    location: /etc/iptables/rules.v4
+    format: key-value
+    encoding: utf-8
+    permissions: "0600"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: ""
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            -A:
+                type: string
+                default: ""
+                description: Append rule
+
+            -I:
+                type: string
+                default: ""
+                description: Insert rule
+
+            -D:
+                type: string
+                default: ""
+                description: Delete rule
+
+            -P:
+                type: string
+                default: ""
+                description: Policy
+
+            -N:
+                type: string
+                default: ""
+                description: New chain
+
+            -X:
+                type: string
+                default: ""
+                description: Delete chain
+
+            -F:
+                type: string
+                default: ""
+                description: Flush chain
+
+            -L:
+                type: string
+                default: ""
+                description: List rules
+
+            -t:
+                type: string
+                default: filter
+                description: Table

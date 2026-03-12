@@ -1,0 +1,36 @@
+file:
+    location: /etc/sudoers
+    format: key-value
+    encoding: utf-8
+    permissions: "0440"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            Defaults:
+                type: string
+                default: ""
+                description: Default options
+
+            root:
+                type: string
+                default: ALL=(ALL:ALL) ALL
+                description: Root user privileges
+
+            sudo_group:
+                type: string
+                default: ALL=(ALL:ALL) ALL
+                description: Sudo group privileges
+
+            user:
+                type: string
+                default: ""
+                description: User privileges

@@ -1,0 +1,12 @@
+manifest_scheme_revision: 1
+application:
+    name: hosts
+    version: 1.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    hosts: hosts
+
+detect_installed:
+    - /etc/hosts

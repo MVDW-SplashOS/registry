@@ -1,0 +1,21 @@
+file:
+    location: /etc/hostname
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: ""
+    case_sensitive: true
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            hostname:
+                type: string
+                default: ""
+                description: System hostname

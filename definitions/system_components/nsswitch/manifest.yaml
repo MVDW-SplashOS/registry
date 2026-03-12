@@ -1,0 +1,12 @@
+manifest_scheme_revision: 1
+application:
+    name: nsswitch
+    version: 1.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    nsswitch_conf: nsswitch.conf
+
+detect_installed:
+    - /etc/nsswitch.conf

@@ -1,0 +1,71 @@
+file:
+    location: /etc/network/interfaces
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: ""
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            auto:
+                type: string
+                default: ""
+                description: Interfaces to auto-start
+
+            iface:
+                type: string
+                default: ""
+                description: Interface definition
+
+            address:
+                type: string
+                default: ""
+                description: IP address
+
+            netmask:
+                type: string
+                default: ""
+                description: Netmask
+
+            gateway:
+                type: string
+                default: ""
+                description: Gateway
+
+            network:
+                type: string
+                default: ""
+                description: Network
+
+            broadcast:
+                type: string
+                default: ""
+                description: Broadcast address
+
+            dns_nameservers:
+                type: string
+                default: ""
+                description: DNS nameservers
+
+            dns_search:
+                type: string
+                default: ""
+                description: DNS search domain
+
+            up:
+                type: string
+                default: ""
+                description: Up command
+
+            down:
+                type: string
+                default: ""
+                description: Down command

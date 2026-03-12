@@ -5,6 +5,8 @@ import tempfile
 import shutil
 import subprocess
 import yaml
+import json
+import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
@@ -821,6 +823,138 @@ class RegistryCLI:
         """Detect installed packages"""
         self.list_command(category=package, detected_only=True)
 
+    def validate_config_command(self, path: str, strict: bool = False):
+        """Validate a configuration file against its definition"""
+        try:
+            parts = path.split("/")
+            if len(parts) < 3:
+                print("Invalid path format. Use: category/package/config_path")
+                sys.exit(1)
+
+            category = parts[0]
+            package = parts[1]
+            config_path = "/".join(parts[2:])
+
+            structure = self._get_config_structure(category, package, config_path)
+            config_file = self._get_config_file_path(structure)
+
+            if not config_file.exists():
+                print(f"Configuration file does not exist: {config_file}")
+                sys.exit(1)
+
+            print(f"Validating: {config_file}")
+            print("=" * 60)
+
+            current_config = decoder.decode_file(str(config_file), structure)
+
+            format_type = structure.get("file", {}).get("format", "key-value")
+            encoding_structure = {
+                "format": format_type,
+                "syntax": structure.get("syntax", {}),
+                "structures": structure.get("structures", {}),
+            }
+
+            filetype_decoder = decoder.get_filetype_decoder(format_type)
+            if filetype_decoder:
+                validation_errors = filetype_decoder.validate(current_config, encoding_structure)
+                
+                if validation_errors:
+                    print(f"Validation FAILED ({len(validation_errors)} error(s)):")
+                    for error in validation_errors:
+                        print(f"  - {error}")
+                    sys.exit(1)
+                else:
+                    print("Validation PASSED")
+            else:
+                print(f"No validator available for format: {format_type}")
+
+        except Exception as e:
+            print(f"Error validating config: {e}")
+            if self.verbose:
+                import traceback
+                traceback.print_exc()
+            sys.exit(1)
+
+    def export_command(self, file_path: str = None, format: str = "yaml"):
+        """Export registry state"""
+        try:
+            changes = self._load_changes()
+            backups = []
+
+            if self.backup_dir.exists():
+                for backup in self.backup_dir.glob("*.bak"):
+                    backups.append({
+                        "name": backup.name,
+                        "path": str(backup),
+                        "timestamp": backup.stat().st_mtime,
+                    })
+
+            export_data = {
+                "version": "1.0",
+                "changes": changes,
+                "backups": backups,
+                "metadata": {
+                    "exported_at": str(datetime.datetime.now()),
+                    "version": "0.1.0",
+                }
+            }
+
+            if format == "json":
+                output = json.dumps(export_data, indent=2)
+            else:
+                output = yaml.dump(export_data, default_flow_style=False)
+
+            if file_path:
+                with open(file_path, "w") as f:
+                    f.write(output)
+                print(f"Exported to: {file_path}")
+            else:
+                print(output)
+
+        except Exception as e:
+            print(f"Error exporting: {e}")
+            if self.verbose:
+                import traceback
+                traceback.print_exc()
+            sys.exit(1)
+
+    def import_command(self, file_path: str, merge: bool = False):
+        """Import registry state"""
+        try:
+            with open(file_path, "r") as f:
+                if file_path.endswith(".json"):
+                    import_data = json.load(f)
+                else:
+                    import_data = yaml.safe_load(f)
+
+            if "version" not in import_data:
+                print("Invalid import file: missing version")
+                sys.exit(1)
+
+            imported_changes = import_data.get("changes", {})
+
+            if not merge:
+                current_changes = {}
+            else:
+                current_changes = self._load_changes()
+                for cat, packages in imported_changes.items():
+                    if cat not in current_changes:
+                        current_changes[cat] = {}
+                    for pkg, configs in packages.items():
+                        if pkg not in current_changes[cat]:
+                            current_changes[cat][pkg] = {}
+                        current_changes[cat][pkg].update(configs)
+
+            self._save_changes(current_changes)
+            print(f"Imported {len(imported_changes)} change(s)")
+
+        except Exception as e:
+            print(f"Error importing: {e}")
+            if self.verbose:
+                import traceback
+                traceback.print_exc()
+            sys.exit(1)
+
     def backup_list_command(self):
         """List available backups"""
         if not self.backup_dir.exists():
@@ -899,12 +1033,19 @@ def main():
 Examples:
   registry set system_applications/openssh-server/sshd_config/Port 2222
   registry get system_applications/openssh-server/sshd_config/Port
+  registry validate-config system_applications/openssh-server/sshd_config
   registry diff
   registry validate
   registry apply
   registry discard
   registry reset system_applications/openssh-server/sshd_config/Port
   registry view changes
+  registry list
+  registry search openssh
+  registry info system_applications/openssh-server
+  registry detect
+  registry export --file backup.yaml
+  registry import backup.yaml
         """,
     )
 
@@ -946,6 +1087,11 @@ Examples:
     # validate command
     subparsers.add_parser("validate", help="Validate pending changes against definitions")
 
+    # validate-config command
+    validate_config_parser = subparsers.add_parser("validate-config", help="Validate a config file")
+    validate_config_parser.add_argument("path", help="Configuration path (category/package/config)")
+    validate_config_parser.add_argument("--strict", action="store_true", help="Enable strict validation")
+
     # list command
     list_parser = subparsers.add_parser("list", help="List available packages")
     list_parser.add_argument("category", nargs="?", help="Category to list (optional)")
@@ -968,6 +1114,16 @@ Examples:
     backup_subparsers.add_argument("action", choices=["list"], help="Backup action")
     backup_subparsers.add_argument("backup_name", nargs="?", help="Backup name (for restore/delete)")
 
+    # export command
+    export_parser = subparsers.add_parser("export", help="Export registry state")
+    export_parser.add_argument("--file", "-f", help="Output file path")
+    export_parser.add_argument("--format", choices=["yaml", "json"], default="yaml", help="Export format")
+
+    # import command
+    import_parser = subparsers.add_parser("import", help="Import registry state")
+    import_parser.add_argument("file", help="Import file path")
+    import_parser.add_argument("--merge", "-m", action="store_true", help="Merge with existing changes")
+
     args = parser.parse_args()
 
     cli = RegistryCLI(verbose=args.verbose)
@@ -988,6 +1144,8 @@ Examples:
         cli.diff_command()
     elif args.command == "validate":
         cli.validate_command()
+    elif args.command == "validate-config":
+        cli.validate_config_command(args.path, strict=args.strict)
     elif args.command == "list":
         cli.list_command(category=args.category, detected_only=args.detected)
     elif args.command == "search":
@@ -1006,6 +1164,10 @@ Examples:
         else:
             print("Usage: registry backup list")
             sys.exit(1)
+    elif args.command == "export":
+        cli.export_command(file_path=args.file, format=args.format)
+    elif args.command == "import":
+        cli.import_command(args.file, merge=args.merge)
     else:
         parser.print_help()
         sys.exit(1)

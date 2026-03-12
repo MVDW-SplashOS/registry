@@ -1,0 +1,97 @@
+file:
+    location: /etc/fail2ban/jail.local
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: false
+    delimiter: " = "
+
+structures:
+    main:
+        options:
+            bantime:
+                type: integer
+                default: 600
+                description: Ban time in seconds
+
+            findtime:
+                type: integer
+                default: 600
+                description: Time window for failures
+
+            maxretry:
+                type: integer
+                default: 5
+                description: Maximum failures before ban
+
+            destemail:
+                type: string
+                default: root@localhost
+                description: Email for notifications
+
+            sender:
+                type: string
+                default: root@localhost
+                description: Sender email address
+
+            action:
+                type: string
+                default: action_mwl
+                description: Default action
+
+            backend:
+                type: string
+                default: auto
+                description: Backend to use
+
+            protocol:
+                type: string
+                default: tcp
+                description: Protocol to filter
+
+            chain:
+                type: string
+                default: INPUT
+                description: iptables chain
+
+    jail:
+        enabled:
+            type: boolean
+            default: false
+            description: Jail enabled status
+
+        port:
+            type: string
+            default: ""
+            description: Port to monitor
+
+        filter:
+            type: string
+            default: ""
+            description: Filter to use
+
+        logpath:
+            type: string
+            default: /var/log/auth.log
+            description: Log file path
+
+        bantime:
+            type: integer
+            default: 600
+            description: Jail-specific ban time
+
+        findtime:
+            type: integer
+            default: 600
+            description: Jail-specific find time
+
+        maxretry:
+            type: integer
+            default: 5
+            description: Jail-specific max retries

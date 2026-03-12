@@ -1,0 +1,14 @@
+manifest_scheme_revision: 1
+application:
+    name: fail2ban
+    version: 1.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    jail_local: jail.local
+
+detect_installed:
+    - /etc/fail2ban/jail.conf
+    - /etc/fail2ban/jail.local
+    - /usr/bin/fail2ban-client

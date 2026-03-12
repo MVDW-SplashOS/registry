@@ -1,0 +1,13 @@
+manifest_scheme_revision: 1
+application:
+    name: networking
+    version: 1.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    interfaces: interfaces
+
+detect_installed:
+    - /etc/network/interfaces
+    - /etc/network/interfaces.d
