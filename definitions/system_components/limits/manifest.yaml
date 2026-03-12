@@ -1,0 +1,12 @@
+manifest_scheme_revision: 1
+application:
+    name: limits
+    version: 1.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    limits_conf: limits.conf
+
+detect_installed:
+    - /etc/security/limits.conf

@@ -1,0 +1,13 @@
+manifest_scheme_revision: 1
+application:
+    name: sysctl
+    version: 1.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    sysctl_conf: sysctl.conf
+
+detect_installed:
+    - /etc/sysctl.conf
+    - /usr/sbin/sysctl

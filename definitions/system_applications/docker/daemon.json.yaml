@@ -1,0 +1,126 @@
+file:
+    location: /etc/docker/daemon.json
+    format: json
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: docker
+
+structures:
+    main:
+        options:
+            registry-mirrors:
+                type: array
+                default: []
+                description: List of Docker registry mirrors
+
+            insecure-registries:
+                type: array
+                default: []
+                description: List of insecure registries
+
+            storage-driver:
+                type: string
+                default: overlay2
+                description: Storage driver to use
+
+            log-driver:
+                type: string
+                default: json-file
+                values: [json-file, syslog, journald, gelf, fluentd, awslogs, splunk, etwlogs, gcplogs, none]
+                description: Logging driver
+
+            log-opts:
+                type: object
+                default: {}
+                description: Logging driver options
+
+            live-restore:
+                type: boolean
+                default: true
+                description: Keep containers alive during daemon downtime
+
+            userland-proxy:
+                type: boolean
+                default: true
+                description: Use userland proxy for inter-container communication
+
+            iptables:
+                type: boolean
+                default: true
+                description: Enable iptables rules
+
+            ip-forward:
+                type: boolean
+                default: true
+                description: Enable IP forwarding
+
+            ip-masq:
+                type: boolean
+                default: true
+                description: Enable IP masquerading
+
+            ipv6:
+                type: boolean
+                default: false
+                description: Enable IPv6 networking
+
+            default-address-pools:
+                type: array
+                default: []
+                description: Custom default address pools
+
+            debug:
+                type: boolean
+                default: false
+                description: Enable debug mode
+
+            hosts:
+                type: array
+                default: []
+                description: Daemon socket hosts
+
+            tls:
+                type: boolean
+                default: false
+                description: Enable TLS
+
+            tlscacert:
+                type: string
+                default: ""
+                description: Path to CA cert
+
+            tlscert:
+                type: string
+                default: ""
+                description: Path to server cert
+
+            tlskey:
+                type: string
+                default: ""
+                description: Path to server key
+
+            max-concurrent-downloads:
+                type: integer
+                default: 3
+                description: Max concurrent downloads
+
+            max-concurrent-uploads:
+                type: integer
+                default: 5
+                description: Max concurrent uploads
+
+            default-ulimits:
+                type: object
+                default: {}
+                description: Default ulimits for containers
+
+            dns:
+                type: array
+                default: []
+                description: DNS servers to use
+
+            annotations:
+                type: object
+                default: {}
+                description: Daemon annotations

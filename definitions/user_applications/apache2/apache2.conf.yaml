@@ -1,0 +1,141 @@
+file:
+    location: /etc/apache2/apache2.conf
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            ServerRoot:
+                type: string
+                default: /etc/apache2
+                description: Server root directory
+
+            ServerName:
+                type: string
+                default: ""
+                description: Server hostname
+
+            ServerAdmin:
+                type: string
+                default: webmaster@localhost
+                description: Server admin email
+
+            ServerAlias:
+                type: string
+                default: ""
+                description: Server alias
+
+            DocumentRoot:
+                type: string
+                default: /var/www
+                description: Document root directory
+
+            Listen:
+                type: string
+                default: "80"
+                description: Port to listen on
+
+            LoadModule:
+                type: string
+                default: ""
+                description: Module to load
+
+            Include:
+                type: string
+                default: ""
+                description: Include configuration file
+
+            IncludeOptional:
+                type: string
+                default: ""
+                description: Optionally include configuration
+
+            ErrorLog:
+                type: string
+                default: ${APACHE_LOG_DIR}/error.log
+                description: Error log file
+
+            LogLevel:
+                type: string
+                default: warn
+                description: Log level
+
+            CustomLog:
+                type: string
+                default: ${APACHE_LOG_DIR}/access.log combined
+                description: Custom log file
+
+            LogFormat:
+                type: string
+                default: ""
+                description: Log format definition
+
+            Timeout:
+                type: integer
+                default: 300
+                description: Request timeout in seconds
+
+            KeepAlive:
+                type: boolean
+                default: On
+                description: Enable persistent connections
+
+            MaxKeepAliveRequests:
+                type: integer
+                default: 100
+                description: Max requests per connection
+
+            KeepAliveTimeout:
+                type: integer
+                default: 5
+                description: Keep-alive timeout
+
+            User:
+                type: string
+                default: www-data
+                description: User to run as
+
+            Group:
+                type: string
+                default: www-data
+                description: Group to run as
+
+            ServerTokens:
+                type: string
+                default: Prod
+                description: Server response header
+
+            ServerSignature:
+                type: string
+                default: Off
+                description: Show server signature
+
+            AllowOverride:
+                type: string
+                default: None
+                description: Allow .htaccess overrides
+
+            Options:
+                type: string
+                default: None
+                description: Directory options
+
+            Require:
+                type: string
+                default: all granted
+                description: Access control
+
+            DirectoryIndex:
+                type: string
+                default: index.html index.htm
+                description: Default index files

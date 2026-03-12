@@ -1,0 +1,101 @@
+file:
+    location: /etc/sysctl.conf
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: true
+    delimiter: "="
+
+structures:
+    main:
+        options:
+            kernel.panic:
+                type: integer
+                default: 0
+                description: Seconds after panic to reboot
+
+            kernel.panic_on_oops:
+                type: integer
+                default: 1
+                description: Panic on oops
+
+            kernel.sysrq:
+                type: integer
+                default: 0
+                description: Enable sysrq
+
+            net.ipv4.tcp_syncookies:
+                type: integer
+                default: 1
+                description: Enable TCP SYN cookies
+
+            net.ipv4.conf.all.rp_filter:
+                type: integer
+                default: 1
+                description: Reverse path filtering
+
+            net.ipv4.conf.default.rp_filter:
+                type: integer
+                default: 1
+                description: Default reverse path filtering
+
+            net.ipv4.icmp_echo_ignore_broadcasts:
+                type: integer
+                default: 1
+                description: Ignore ICMP broadcasts
+
+            net.ipv4.icmp_ignore_bogus_error_responses:
+                type: integer
+                default: 1
+                description: Ignore bogus ICMP errors
+
+            net.ipv4.tcp_timestamps:
+                type: integer
+                default: 1
+                description: Enable TCP timestamps
+
+            net.ipv4.tcp_sack:
+                type: integer
+                default: 1
+                description: Enable TCP SACK
+
+            net.core.netdev_max_backlog:
+                type: integer
+                default: 5000
+                description: Max backlog queue
+
+            net.core.somaxconn:
+                type: integer
+                default: 1024
+                description: Max connections
+
+            net.ipv4.tcp_max_syn_backlog:
+                type: integer
+                default: 1024
+                description: Max SYN backlog
+
+            fs.file-max:
+                type: integer
+                default: 65536
+                description: Max file handles
+
+            vm.swappiness:
+                type: integer
+                default: 60
+                description: Swap tendency
+
+            vm.dirty_ratio:
+                type: integer
+                default: 15
+                description: Dirty page ratio
+
+            vm.dirty_background_ratio:
+                type: integer
+                default: 5
+                description: Dirty background ratio

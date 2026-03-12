@@ -1,0 +1,14 @@
+manifest_scheme_revision: 1
+application:
+    name: apache2
+    version: 2.4
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    apache2_conf: apache2.conf
+
+detect_installed:
+    - /usr/sbin/apache2
+    - /usr/sbin/apache2ctl
+    - /etc/apache2/apache2.conf

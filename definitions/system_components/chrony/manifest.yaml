@@ -1,0 +1,15 @@
+manifest_scheme_revision: 1
+application:
+    name: chrony
+    version: 4.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    chrony_conf: chrony.conf
+
+detect_installed:
+    - /usr/sbin/chronyd
+    - /usr/sbin/chronyc
+    - /etc/chrony/chrony.conf
+    - /etc/chrony.conf

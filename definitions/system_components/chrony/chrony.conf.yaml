@@ -1,0 +1,116 @@
+file:
+    location: /etc/chrony/chrony.conf
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            server:
+                type: string
+                default: ""
+                description: NTP server to use
+
+            pool:
+                type: string
+                default: ""
+                description: NTP pool to use
+
+            driftfile:
+                type: string
+                default: /var/lib/chrony/drift
+                description: Drift file location
+
+            makestep:
+                type: string
+                default: ""
+                description: Step the clock if adjustment is larger than threshold
+
+            maxdistance:
+                type: string
+                default: ""
+                description: Maximum allowed distance
+
+            maxpoll:
+                type: integer
+                default: 10
+                description: Maximum poll interval
+
+            minpoll:
+                type: integer
+                default: 6
+                description: Minimum poll interval
+
+            leapseclocation:
+                type: string
+                default: ""
+                description: Leap second file location
+
+            leapsectz:
+                type: string
+                default: ""
+                description: Leap second timezone
+
+            rtcsync:
+                type: boolean
+                default: true
+                description: Sync RTC at startup
+
+            log:
+                type: string
+                default: ""
+                description: Logging options
+
+            bindcmdaddress:
+                type: string
+                default: ""
+                description: Bind command socket address
+
+            cmdallow:
+                type: string
+                default: ""
+                description: Allow chronyc commands from address
+
+            cmddeny:
+                type: string
+                default: ""
+                description: Deny chronyc commands from address
+
+            port:
+                type: integer
+                default: 323
+                description: Port for chronyc commands
+
+            user:
+                type: string
+                default: chrony
+                description: User to run as
+
+            comments:
+                type: string
+                default: ""
+                description: Comments
+
+            keyfile:
+                type: string
+                default: /etc/chrony/chrony.keys
+                description: Keys file location
+
+            noclientlog:
+                type: boolean
+                default: false
+                description: Disable client logging
+
+            clientlogport:
+                type: integer
+                default: 0
+                description: Client log port

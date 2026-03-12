@@ -1,0 +1,14 @@
+manifest_scheme_revision: 1
+application:
+    name: docker
+    version: 24.0
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    daemon_json: daemon.json
+
+detect_installed:
+    - /usr/bin/docker
+    - /etc/docker/daemon.json
+    - /var/run/docker.sock

@@ -91,11 +91,12 @@ class Decoder:
         filetype_map = {
             ".conf": "key-value",
             ".cfg": "key-value",
-            ".ini": "key-value",
+            ".ini": "ini",
             ".json": "json",
             ".xml": "xml",
             ".yaml": "yaml",
             ".yml": "yaml",
+            ".toml": "toml",
         }
 
         return filetype_map.get(ext, "key-value")

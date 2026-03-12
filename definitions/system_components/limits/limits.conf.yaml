@@ -1,0 +1,106 @@
+file:
+    location: /etc/security/limits.conf
+    format: key-value
+    encoding: utf-8
+    permissions: "0644"
+    owner: root
+    group: root
+
+syntax:
+    comment_char: "#"
+    line_continuation: "\\"
+    case_sensitive: false
+    delimiter: " "
+
+structures:
+    main:
+        options:
+            soft:
+                type: string
+                default: ""
+                description: Soft limit keyword
+
+            hard:
+                type: string
+                default: ""
+                description: Hard limit keyword
+
+            -:
+                type: string
+                default: ""
+                description: Both soft and hard limits
+
+            core:
+                type: integer
+                default: 0
+                description: Core dump size (KB)
+
+            data:
+                type: integer
+                default: unlimited
+                description: Max data size (KB)
+
+            fsize:
+                type: integer
+                default: unlimited
+                description: Max file size (KB)
+
+            memlock:
+                type: integer
+                default: unlimited
+                description: Max locked memory (KB)
+
+            nofile:
+                type: integer
+                default: 1024
+                description: Max open files
+
+            rss:
+                type: integer
+                default: unlimited
+                description: Max resident set (KB)
+
+            stack:
+                type: integer
+                default: 8192
+                description: Max stack size (KB)
+
+            cpu:
+                type: integer
+                default: unlimited
+                description: Max CPU time (minutes)
+
+            nproc:
+                type: integer
+                default: unlimited
+                description: Max processes
+
+            as:
+                type: integer
+                default: unlimited
+                description: Address space limit (KB)
+
+            locks:
+                type: integer
+                default: unlimited
+                description: Max file locks
+
+            sigpending:
+                type: integer
+                default: unlimited
+                description: Max pending signals
+
+            msgqueue:
+                type: integer
+                default: unlimited
+                description: Max message queue (bytes)
+
+            nice:
+                type: integer
+                default: 0
+                description: Max nice value
+
+            rtprio:
+                type: integer
+                default: 0
+                description: Max realtime priority
