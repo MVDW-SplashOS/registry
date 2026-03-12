@@ -45,6 +45,24 @@ class TestYamlEncoder:
         assert "server1" in result
         assert "server2" in result
 
+    def test_encode_float(self):
+        data = {"rate": 3.14}
+        structure = {"format": "yaml"}
+        result = self.encoder.encode(data, structure)
+        assert "rate: 3.14" in result
+
+    def test_encode_none_value(self):
+        data = {"key": None}
+        structure = {"format": "yaml"}
+        result = self.encoder.encode(data, structure)
+        assert "key: null" in result
+
+    def test_encode_empty_dict(self):
+        data = {}
+        structure = {"format": "yaml"}
+        result = self.encoder.encode(data, structure)
+        assert result.strip() == "{}"
+
     def test_validate_structure_valid(self):
         data = {"main": {"port": 8080}}
         structure = {
@@ -167,3 +185,27 @@ disabled: false
         }
         errors = self.decoder.validate(data, structure)
         assert len(errors) > 0
+
+    def test_decode_none_value(self):
+        content = "key: null"
+        structure = {"format": "yaml"}
+        result = self.decoder.decode(content, structure)
+        assert result["key"] is None
+
+    def test_decode_empty_list(self):
+        content = "items: []"
+        structure = {"format": "yaml"}
+        result = self.decoder.decode(content, structure)
+        assert result["items"] == []
+
+    def test_decode_unicode(self):
+        content = "message: hëllö wörld"
+        structure = {"format": "yaml"}
+        result = self.decoder.decode(content, structure)
+        assert result["message"] == "hëllö wörld"
+
+    def test_decode_multiline_string(self):
+        content = "description: |\n  line1\n  line2"
+        structure = {"format": "yaml"}
+        result = self.decoder.decode(content, structure)
+        assert "line1" in result["description"]

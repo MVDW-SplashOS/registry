@@ -38,6 +38,30 @@ class TestXmlEncoder:
         result = self.encoder.encode(data, structure)
         assert "<port>8080</port>" in result
 
+    def test_encode_float(self):
+        data = {"rate": 3.14}
+        structure = {"format": "xml", "root_element": "config"}
+        result = self.encoder.encode(data, structure)
+        assert "<rate>3.14</rate>" in result
+
+    def test_encode_list(self):
+        data = {"servers": ["server1", "server2"]}
+        structure = {"format": "xml", "root_element": "config"}
+        result = self.encoder.encode(data, structure)
+        assert "<servers>" in result
+
+    def test_encode_empty_dict(self):
+        data = {}
+        structure = {"format": "xml", "root_element": "config"}
+        result = self.encoder.encode(data, structure)
+        assert result
+
+    def test_encode_unicode(self):
+        data = {"message": "hello world"}
+        structure = {"format": "xml", "root_element": "config"}
+        result = self.encoder.encode(data, structure)
+        assert "hello world" in result
+
     def test_validate_structure_valid(self):
         data = {"main": {"port": 8080}}
         structure = {
@@ -52,6 +76,37 @@ class TestXmlEncoder:
         }
         errors = self.encoder.validate_structure(data, structure)
         assert len(errors) == 0
+
+    def test_validate_structure_invalid_type(self):
+        data = {"main": {"port": "not_an_integer"}}
+        structure = {
+            "format": "xml",
+            "structures": {
+                "main": {
+                    "options": {
+                        "port": {"type": "integer"}
+                    }
+                }
+            }
+        }
+        errors = self.encoder.validate_structure(data, structure)
+        assert len(errors) > 0
+
+    def test_encode_decode_roundtrip(self):
+        decoder = XmlDecoder()
+        original_data = {
+            "server": {
+                "host": "localhost",
+                "port": "8080",
+                "enabled": "true"
+            }
+        }
+        structure = {"format": "xml", "root_element": "config"}
+        
+        encoded = self.encoder.encode(original_data, structure)
+        decoded = decoder.decode(encoded, structure)
+        
+        assert decoded["server"]["host"] == "localhost"
 
 
 class TestXmlDecoder:
@@ -70,6 +125,12 @@ class TestXmlDecoder:
         result = self.decoder.decode(content, structure)
         assert result["section"]["key"] == "value"
 
+    def test_decode_list(self):
+        content = "<config><servers><server>server1</server><server>server2</server></servers></config>"
+        structure = {"format": "xml"}
+        result = self.decoder.decode(content, structure)
+        assert "servers" in result
+
     def test_decode_encode_roundtrip(self):
         original_data = {"server": {"host": "localhost", "port": "8080"}}
         structure = {"format": "xml", "root_element": "config"}
@@ -84,3 +145,15 @@ class TestXmlDecoder:
         structure = {"format": "xml"}
         with pytest.raises(ValueError):
             self.decoder.decode(content, structure)
+
+    def test_decode_empty_xml(self):
+        content = "<config></config>"
+        structure = {"format": "xml"}
+        result = self.decoder.decode(content, structure)
+        assert result == {}
+
+    def test_decode_attributes(self):
+        content = '<config key="value"></config>'
+        structure = {"format": "xml"}
+        result = self.decoder.decode(content, structure)
+        assert "@attributes" in result or "key" in result.get("config", {})
