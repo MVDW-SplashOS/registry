@@ -1,0 +1,215 @@
+file:
+  location: /etc/systemd/system
+  format: key-value
+  encoding: utf-8
+  permissions: "644"
+  owner: root
+  group: root
+
+structures:
+  main:
+    type: systemd_unit
+    options:
+      Description:
+        type: string
+        required: true
+        description: Human-readable description of the unit
+      Documentation:
+        type: string_list
+        default: []
+        description: Documentation URIs
+      Requires:
+        type: string_list
+        default: []
+        description: Units required by this unit
+      Wants:
+        type: string_list
+        default: []
+        description: Units wanted by this unit
+      After:
+        type: string_list
+        default: []
+        description: Units that should be started after this unit
+      Before:
+        type: string_list
+        default: []
+        description: Units that should be started before this unit
+      Conflicts:
+        type: string_list
+        default: []
+        description: Units that conflict with this unit
+      ConditionPathExists:
+        type: string_list
+        default: []
+        description: Check if paths exist before starting
+      ConditionPathIsDirectory:
+        type: string_list
+        default: []
+        description: Check if paths are directories before starting
+      Type:
+        type: enum
+        values: ["simple", "forking", "oneshot", "dbus", "notify", "idle"]
+        default: "simple"
+        description: Unit process type
+      RemainAfterExit:
+        type: boolean
+        default: false
+        description: Remain active after service exits
+      ExecStart:
+        type: string
+        required: true
+        description: Command to start the service
+      ExecStartPre:
+        type: string_list
+        default: []
+        description: Commands to run before starting
+      ExecStartPost:
+        type: string_list
+        default: []
+        description: Commands to run after starting
+      ExecStop:
+        type: string
+        default: ""
+        description: Command to stop the service
+      ExecStopPost:
+        type: string_list
+        default: []
+        description: Commands to run after stopping
+      ExecReload:
+        type: string
+        default: ""
+        description: Command to reload the service
+      Restart:
+        type: enum
+        values: ["no", "on-success", "on-failure", "on-abnormal", "on-watchdog", "on-abort", "always"]
+        default: "no"
+        description: Restart policy
+      RestartSec:
+        type: integer
+        default: 100
+        min: 1
+        max: 3600
+        description: Time to wait before restarting (milliseconds)
+      TimeoutStartSec:
+        type: integer
+        default: 90
+        min: 1
+        max: 3600
+        description: Startup timeout in seconds
+      TimeoutStopSec:
+        type: integer
+        default: 90
+        min: 1
+        max: 3600
+        description: Shutdown timeout in seconds
+      User:
+        type: string
+        default: "root"
+        description: User to run service as
+      Group:
+        type: string
+        default: "root"
+        description: Group to run service as
+      WorkingDirectory:
+        type: string
+        default: ""
+        description: Working directory for service
+      Environment:
+        type: string_list
+        default: []
+        description: Environment variables
+      EnvironmentFile:
+        type: string_list
+        default: []
+        description: Files containing environment variables
+      StandardOutput:
+        type: enum
+        values: ["inherit", "null", "tty", "journal", "syslog", "kmsg", "journal+console", "syslog+console", "kmsg+console"]
+        default: "journal"
+        description: Standard output destination
+      StandardError:
+        type: enum
+        values: ["inherit", "null", "tty", "journal", "syslog", "kmsg", "journal+console", "syslog+console", "kmsg+console"]
+        default: "inherit"
+        description: Standard error destination
+      LimitNOFILE:
+        type: integer
+        default: 1024
+        min: 1
+        max: 1048576
+        description: Maximum number of open files
+      LimitNPROC:
+        type: integer
+        default: 64
+        min: 1
+        max: 4194304
+        description: Maximum number of processes
+      WantedBy:
+        type: string_list
+        default: ["multi-user.target"]
+        description: Targets that want this unit
+      RequiredBy:
+        type: string_list
+        default: []
+        description: Targets that require this unit
+
+syntax:
+  comment_char: "#"
+  delimiter: "="
+  line_continuation: "\\"
+  case_sensitive: true
+  quote_values: true
+  blocks:
+    - name: Unit
+      type: section
+      start_pattern: "[Unit]"
+      end_pattern: ""
+    - name: Service
+      type: section
+      start_pattern: "[Service]"
+      end_pattern: ""
+    - name: Install
+      type: section
+      start_pattern: "[Install]"
+      end_pattern: ""
+
+parsing:
+  directive_format:
+    - simple
+    - multi_value
+  multi_occurrence:
+    behavior: append
+  ordering:
+    significant_for:
+      - section_order
+
+validation:
+  rules:
+    - name: required_description
+      when: "not Description"
+      message: "Unit must have a Description"
+    - name: required_execstart
+      when: "Type != 'oneshot' and not ExecStart"
+      message: "Service unit must have ExecStart (except for oneshot type)"
+    - name: restart_policy_warning
+      when: "Restart == 'always'"
+      message: "Always restart policy may cause service to restart indefinitely"
+    - name: user_security
+      when: "User == 'root'"
+      message: "Consider running service as non-root user for security"
+
+relationships:
+  dependencies:
+    - when: "Type == 'dbus'"
+      requires:
+        - "dbus.socket"
+    - when: "Type == 'notify'"
+      requires:
+        - "sd-notify support in service"
+
+deprecated:
+  - structure: main
+    option: RestartForceExitStatus
+    since_version: "247"
+    replacement: "SuccessExitStatus"
+    message: "RestartForceExitStatus is deprecated, use SuccessExitStatus instead"

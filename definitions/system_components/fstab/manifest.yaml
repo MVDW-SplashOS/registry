@@ -1,0 +1,14 @@
+manifest_scheme_revision: 1
+application:
+    name: fstab
+    version: 2.1
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    fstab: fstab.yaml
+
+detect_installed:
+    - /etc/fstab
+    - /bin/mount
+    - /bin/umount

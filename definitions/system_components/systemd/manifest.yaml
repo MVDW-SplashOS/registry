@@ -1,0 +1,15 @@
+manifest_scheme_revision: 1
+application:
+    name: systemd
+    version: 253
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    systemd_units: systemd_units.yaml
+
+detect_installed:
+    - /usr/lib/systemd/system
+    - /etc/systemd/system
+    - /bin/systemctl
+    - /usr/bin/systemctl

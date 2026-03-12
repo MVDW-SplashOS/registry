@@ -1,0 +1,106 @@
+file:
+  location: /etc/fstab
+  format: key-value
+  encoding: utf-8
+  permissions: "644"
+  owner: root
+  group: root
+
+structures:
+  main:
+    type: filesystem_table
+    options:
+      device:
+        type: string
+        required: true
+        description: Block device or filesystem to mount
+      mount_point:
+        type: string
+        required: true
+        description: Directory where filesystem will be mounted
+      filesystem:
+        type: string
+        required: true
+        description: Filesystem type
+      options:
+        type: string_list
+        default: defaults
+        description: Mount options
+      dump:
+        type: integer
+        default: 0
+        min: 0
+        max: 1
+        description: Dump frequency (0 = no backup)
+      pass:
+        type: integer
+        default: 0
+        min: 0
+        max: 2
+        description: Filesystem check order (0 = no check)
+
+syntax:
+  comment_char: "#"
+  delimiter: " "
+  line_continuation: "\\"
+  case_sensitive: false
+  quote_values: false
+  field_separator: "\\s+"
+  fields:
+    - device
+    - mount_point
+    - filesystem
+    - options
+    - dump
+    - pass
+
+parsing:
+  directive_format:
+    - filesystem_entry
+  multi_occurrence:
+    behavior: append
+  ordering:
+    significant_for:
+      - filesystem_dependencies
+
+validation:
+  rules:
+    - name: valid_mount_point
+      when: mount_point != "/" and not mount_point.startswith("/")
+      message: Mount point must be absolute path starting with /
+    - name: valid_dump_value
+      when: dump < 0 or dump > 1
+      message: Dump value must be 0 or 1
+    - name: valid_pass_value
+      when: pass < 0 or pass > 2
+      message: Pass value must be 0, 1, or 2
+    - name: root_mount_required
+      when: mount_point == "/" and filesystem != "ext4" and filesystem != "xfs" and filesystem != "btrfs"
+      message: Root filesystem should use ext4, xfs, or btrfs
+    - name: swap_filesystem
+      when: filesystem == "swap" and mount_point != "none"
+      message: Swap filesystem must have mount point 'none'
+
+relationships:
+  filesystem_dependencies:
+    - when: filesystem == "nfs"
+      requires:
+        - package: nfs-utils
+    - when: filesystem == "btrfs"
+      requires:
+        - package: btrfs-progs
+    - when: filesystem == "xfs"
+      requires:
+        - package: xfsprogs
+
+deprecated:
+  - structure: main
+    option: usrquota
+    since_version: "2.0"
+    replacement: quota
+    message: usrquota option is deprecated, use quota instead
+  - structure: main
+    option: grpquota
+    since_version: "2.0"
+    replacement: quota
+    message: grpquota option is deprecated, use quota instead

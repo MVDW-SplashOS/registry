@@ -1,0 +1,16 @@
+manifest_scheme_revision: 1
+application:
+    name: nginx
+    version: 1.24
+definition:
+    libregistry_minimum_version: 0.1.0
+
+structure:
+    nginx_conf: nginx_conf.yaml
+
+detect_installed:
+    - /usr/sbin/nginx
+    - /etc/nginx/nginx.conf
+    - /etc/nginx/conf.d
+    - /etc/nginx/sites-available
+    - /etc/nginx/sites-enabled

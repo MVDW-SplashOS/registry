@@ -1,0 +1,118 @@
+file:
+  location: /etc/nginx/nginx.conf
+  format: key-value
+  encoding: utf-8
+  permissions: "644"
+  owner: root
+  group: root
+
+structures:
+  main:
+    type: nginx_configuration
+    options:
+      worker_processes:
+        type: integer
+        default: 1
+        min: 1
+        max: 16
+        description: Number of worker processes
+      worker_connections:
+        type: integer
+        default: 1024
+        min: 1
+        max: 65536
+        description: Maximum number of connections per worker
+      keepalive_timeout:
+        type: integer
+        default: 65
+        min: 1
+        max: 300
+        description: Keepalive timeout in seconds
+      sendfile:
+        type: boolean
+        default: true
+        description: Enable sendfile
+      tcp_nopush:
+        type: boolean
+        default: true
+        description: Enable TCP no-push
+      tcp_nodelay:
+        type: boolean
+        default: true
+        description: Enable TCP no-delay
+      types_hash_max_size:
+        type: integer
+        default: 2048
+        description: Maximum size of types hash table
+      server_tokens:
+        type: boolean
+        default: true
+        description: Show server tokens in headers
+      client_max_body_size:
+        type: string
+        default: "1m"
+        description: Maximum client request body size
+      error_log:
+        type: string
+        default: "/var/log/nginx/error.log warn"
+        description: Error log file and level
+      pid:
+        type: string
+        default: "/var/run/nginx.pid"
+        description: PID file location
+
+syntax:
+  comment_char: "#"
+  delimiter: " "
+  line_continuation: "\\"
+  case_sensitive: false
+  quote_values: false
+  blocks:
+    - name: events
+      type: section
+      start_pattern: "events {"
+      end_pattern: "}"
+    - name: http
+      type: section
+      start_pattern: "http {"
+      end_pattern: "}"
+    - name: server
+      type: section
+      start_pattern: "server {"
+      end_pattern: "}"
+
+parsing:
+  directive_format:
+    - simple
+    - block
+  multi_occurrence:
+    behavior: append
+  ordering:
+    significant_for:
+      - block_nesting
+
+validation:
+  rules:
+    - name: worker_processes_limit
+      when: worker_processes > 8
+      message: "High number of worker processes may impact system performance"
+    - name: worker_connections_limit
+      when: worker_connections > 16384
+      message: "High number of worker connections may require system tuning"
+    - name: keepalive_timeout_recommended
+      when: keepalive_timeout > 120
+      message: "Long keepalive timeout may consume server resources"
+
+relationships:
+  performance:
+    - when: worker_processes > 1
+      requires:
+        - sendfile: true
+        - tcp_nopush: true
+
+deprecated:
+  - structure: main
+    option: daemon
+    since_version: "1.2"
+    replacement: "Use systemd service management"
+    message: "daemon option is deprecated, use systemd for service management"
