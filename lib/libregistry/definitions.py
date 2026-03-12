@@ -22,12 +22,16 @@ def get_yaml(path):
 
 def get_main_definition():
     definition_manifest = get_yaml("manifest.yaml")
+    if not definition_manifest or "categories" not in definition_manifest:
+        return {"categories": [], "packages": {}}
+
     definition_manifest["packages"] = {}
 
     for category in definition_manifest["categories"]:
         definition_manifest["packages"][category] = {}
         package_data = get_yaml(os.path.join(category, "packages.yaml"))
-        definition_manifest["packages"][category] = package_data["packages"]
+        if package_data and "packages" in package_data:
+            definition_manifest["packages"][category] = package_data["packages"]
 
     return definition_manifest
 
