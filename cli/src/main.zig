@@ -30,6 +30,8 @@ pub fn main() void {
     _ = args.next();
 
     var verbose = false;
+    var complete_mode = false;
+    var comp_cur: ?[]const u8 = null;
     var command: ?Command = null;
     var remaining_args: std.ArrayList([]const u8) = .empty;
     defer remaining_args.deinit(allocator);
@@ -37,6 +39,10 @@ pub fn main() void {
     while (args.next()) |arg| {
         if (std.mem.eql(u8, arg, "-v") or std.mem.eql(u8, arg, "--verbose")) {
             verbose = true;
+        } else if (std.mem.eql(u8, arg, "--complete")) {
+            complete_mode = true;
+        } else if (std.mem.eql(u8, arg, "--comp-cur")) {
+            comp_cur = args.next();
         } else if (command == null) {
             command = parseCommand(arg);
         } else {
@@ -44,13 +50,61 @@ pub fn main() void {
         }
     }
 
+    if (complete_mode) {
+        handleCompletion(command, comp_cur, remaining_args, allocator);
+        return;
+    }
+
     if (command) |cmd| {
-        executeCommand(cmd, remaining_args) catch |err| {
+        executeCommand(cmd, remaining_args, allocator) catch |err| {
             std.debug.print("Error: {}\n", .{err});
             std.process.exit(1);
         };
     } else {
         printHelp();
+    }
+}
+
+fn handleCompletion(cmd: ?Command, comp_cur: ?[]const u8, args: std.ArrayList([]const u8), allocator: std.mem.Allocator) void {
+    const current = comp_cur orelse "";
+
+    // Only provide completions for get and set commands
+    var is_get_set = false;
+    if (cmd) |c| {
+        if (c == .get or c == .set) {
+            is_get_set = true;
+        }
+    }
+
+    if (!is_get_set) {
+        // For other commands, complete subcommands
+        if (cmd == null) {
+            const commands = [_][]const u8{ "get", "set", "reset", "apply", "discard", "view-changes", "diff", "validate", "validate-config", "list", "search", "info", "detect", "backup", "export", "import", "help" };
+            for (commands) |c| {
+                _ = std.posix.write(1, c) catch {};
+                _ = std.posix.write(1, "\n") catch {};
+            }
+        }
+        return;
+    }
+
+    // Get the path argument (first arg after command)
+    const path = if (args.items.len > 0) args.items[0] else "";
+
+    // Get completions from the library - pass both path and current word
+    const completions = ffi.getCompletions(path, current, allocator) orelse {
+        return;
+    };
+    defer {
+        for (completions) |c| {
+            allocator.free(c);
+        }
+        allocator.free(completions);
+    }
+
+    for (completions) |c| {
+        _ = std.posix.write(1, c) catch {};
+        _ = std.posix.write(1, "\n") catch {};
     }
 }
 
@@ -80,25 +134,99 @@ fn getArg(args: std.ArrayList([]const u8), index: usize) ?[]const u8 {
     return null;
 }
 
-fn executeCommand(cmd: Command, args: std.ArrayList([]const u8)) !void {
+fn parsePath(path: []const u8) ?struct { []const u8, []const u8, []const u8 } {
+    var parts: [3]usize = undefined;
+    var count: usize = 0;
+    var i: usize = 0;
+
+    while (i < path.len) : (i += 1) {
+        if (path[i] == '/') {
+            if (count < 3) {
+                parts[count] = i;
+                count += 1;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    if (count != 2) return null;
+
+    const category = path[0..parts[0]];
+    const package = path[parts[0] + 1..parts[1]];
+    const config_path = path[parts[1] + 1..];
+
+    return .{ category, package, config_path };
+}
+
+fn executeCommand(cmd: Command, args: std.ArrayList([]const u8), allocator: std.mem.Allocator) !void {
     switch (cmd) {
         .set => {
             const path = getArg(args, 0) orelse {
-                std.debug.print("Error: path required\n", .{});
+                std.debug.print("Error: path required (format: category/package/config)\n", .{});
+                std.process.exit(1);
+            };
+            const parsed = parsePath(path) orelse {
+                std.debug.print("Error: invalid path format. Use: category/package/config\n", .{});
                 std.process.exit(1);
             };
             const value = getArg(args, 1) orelse {
                 std.debug.print("Error: value required\n", .{});
                 std.process.exit(1);
             };
-            std.debug.print("Set {s} = {s}\n", .{ path, value });
+
+            const category = parsed[0];
+            const package = parsed[1];
+            const config_path = parsed[2];
+
+            const value_json = std.fmt.allocPrint(allocator, "\"{s}\"", .{value}) catch {
+                std.debug.print("Error: failed to format value\n", .{});
+                std.process.exit(1);
+            };
+            defer allocator.free(value_json);
+
+            const result = ffi.setConfig(
+                category,
+                package,
+                config_path,
+                value_json,
+                allocator,
+            );
+
+            if (result == .success) {
+                std.debug.print("Set {s} = {s}\n", .{ path, value });
+            } else {
+                std.debug.print("Error: failed to set config (error: {})\n", .{result});
+                std.process.exit(1);
+            }
         },
         .get => {
             const path = getArg(args, 0) orelse {
-                std.debug.print("Error: path required\n", .{});
+                std.debug.print("Error: path required (format: category/package/config)\n", .{});
                 std.process.exit(1);
             };
-            std.debug.print("Getting {s}\n", .{ path });
+            const parsed = parsePath(path) orelse {
+                std.debug.print("Error: invalid path format. Use: category/package/config\n", .{});
+                std.process.exit(1);
+            };
+
+            const category = parsed[0];
+            const package = parsed[1];
+            const config_path = parsed[2];
+
+            const result = ffi.getConfig(
+                category,
+                package,
+                config_path,
+                allocator,
+            );
+
+            if (result) |value| {
+                std.debug.print("{s}\n", .{value});
+            } else {
+                std.debug.print("Error: config not found or failed to read\n", .{});
+                std.process.exit(1);
+            }
         },
         .reset => {
             const path = getArg(args, 0) orelse {
@@ -107,8 +235,24 @@ fn executeCommand(cmd: Command, args: std.ArrayList([]const u8)) !void {
             };
             std.debug.print("Resetting {s}\n", .{ path });
         },
-        .apply => std.debug.print("Applying changes...\n", .{}),
-        .discard => std.debug.print("Discarding changes...\n", .{}),
+        .apply => {
+            const result = ffi.applyChanges();
+            if (result == .success) {
+                std.debug.print("Applied changes successfully\n", .{});
+            } else {
+                std.debug.print("Error: failed to apply changes (error: {})\n", .{result});
+                std.process.exit(1);
+            }
+        },
+        .discard => {
+            const result = ffi.discardChanges();
+            if (result == .success) {
+                std.debug.print("Discarded changes successfully\n", .{});
+            } else {
+                std.debug.print("Error: failed to discard changes (error: {})\n", .{result});
+                std.process.exit(1);
+            }
+        },
         .view_changes => std.debug.print("Viewing changes...\n", .{}),
         .diff => std.debug.print("Showing diff...\n", .{}),
         .validate => std.debug.print("Validating configurations...\n", .{}),

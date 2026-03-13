@@ -41,7 +41,7 @@ impl FileTypeDecoder for XmlDecoder {
                         }
                     }
 
-                    let mut element = if attrs.is_empty() {
+                    let element = if attrs.is_empty() {
                         ConfigValue::Object(HashMap::new())
                     } else {
                         let mut map = HashMap::new();

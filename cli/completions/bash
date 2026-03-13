@@ -1,0 +1,66 @@
+_registry_completions() {
+    local cur prev cmd path_arg
+    local cword
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    cword=$COMP_CWORD
+
+    local reg_cmd="${COMP_WORDS[0]}"
+
+    cmd=""
+    path_arg=""
+
+    if [ "$cword" -eq 1 ]; then
+        COMPREPLY=($(compgen -W "get set reset apply discard view-changes diff validate validate-config list search info detect backup export import help" -- "$cur"))
+        return
+    fi
+
+    if [ "$cword" -ge 2 ]; then
+        cmd="${COMP_WORDS[1]}"
+        if [ "$cword" -ge 3 ]; then
+            path_arg="${COMP_WORDS[2]}"
+        fi
+    fi
+
+    if [ "$cmd" != "get" ] && [ "$cmd" != "set" ]; then
+        return
+    fi
+
+    # If prev ends with / (from previous completion), use it as path_arg
+    if [[ "$prev" == */ ]]; then
+        path_arg="$prev"
+        cur=""
+    fi
+
+    # Check if cur contains a / - user is typing category/package/partial
+    if [[ "$cur" == */* ]]; then
+        path_arg="${cur%/*}/"
+        cur="${cur##*/}"
+    fi
+
+    # Check if cur ends with /
+    if [[ "$cur" == */ ]]; then
+        path_arg="$cur"
+        cur=""
+    fi
+
+    # Build command args - only include path_arg if non-empty
+    local cmd_args=("--complete" "--comp-cur" "$cur" "$cmd")
+    if [ -n "$path_arg" ]; then
+        cmd_args+=("$path_arg")
+    fi
+
+    local completions
+    completions=$("$reg_cmd" "${cmd_args[@]}" 2>/dev/null)
+
+    if [ -n "$completions" ]; then
+        COMPREPLY=($(compgen -W "$completions" -- "$cur"))
+    fi
+}
+
+complete -F _registry_completions registry
+
+if [ -f /usr/local/bin/registry ]; then
+    complete -F _registry_completions /usr/local/bin/registry
+fi

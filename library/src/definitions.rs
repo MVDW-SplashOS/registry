@@ -70,7 +70,7 @@ pub fn get_main_definition() -> MainDefinition {
 }
 
 pub fn get_package_definition(
-    main_definition: &MainDefinition,
+    _main_definition: &MainDefinition,
     category: &str,
     package: &str,
 ) -> Option<PackageDefinition> {
@@ -146,7 +146,7 @@ mod tests {
     #[test]
     fn test_get_main_definition() {
         let def = get_main_definition();
-        assert!(def.categories.len() >= 0);
+        assert!(!def.categories.is_empty());
     }
 
     #[test]

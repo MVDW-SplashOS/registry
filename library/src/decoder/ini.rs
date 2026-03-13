@@ -1,5 +1,5 @@
 use crate::decoder::FileTypeDecoder;
-use crate::error::{RegistryError, Result};
+use crate::error::Result;
 use crate::types::{ConfigStructure, ConfigValue};
 use std::collections::HashMap;
 

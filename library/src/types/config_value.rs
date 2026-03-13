@@ -1,7 +1,7 @@
+use crate::error::RegistryError;
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-use crate::error::RegistryError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(untagged)]
@@ -16,19 +16,19 @@ pub enum ConfigValue {
 }
 
 impl ConfigValue {
-    pub fn from_json(json: &str) -> crate::Result<Self> {
+    pub fn from_json(json: &str) -> Result<Self> {
         serde_json::from_str(json).map_err(RegistryError::JsonError)
     }
 
-    pub fn to_json(&self) -> crate::Result<String> {
+    pub fn to_json(&self) -> Result<String> {
         serde_json::to_string(self).map_err(RegistryError::JsonError)
     }
 
-    pub fn from_yaml(yaml: &str) -> crate::Result<Self> {
+    pub fn from_yaml(yaml: &str) -> Result<Self> {
         serde_yaml::from_str(yaml).map_err(RegistryError::YamlError)
     }
 
-    pub fn to_yaml(&self) -> crate::Result<String> {
+    pub fn to_yaml(&self) -> Result<String> {
         serde_yaml::to_string(self).map_err(RegistryError::YamlError)
     }
 
@@ -122,98 +122,5 @@ where
 {
     fn from(m: HashMap<K, V>) -> Self {
         ConfigValue::Object(m.into_iter().map(|(k, v)| (k.into(), v.into())).collect())
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MainDefinition {
-    pub categories: Vec<String>,
-    pub packages: HashMap<String, HashMap<String, PackageDefinition>>,
-}
-
-impl Default for MainDefinition {
-    fn default() -> Self {
-        MainDefinition {
-            categories: Vec::new(),
-            packages: HashMap::new(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PackageDefinition {
-    pub name: Option<String>,
-    pub description: Option<String>,
-    pub detect_installed: Vec<String>,
-    pub structure: HashMap<String, String>,
-    pub dependencies: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ConfigStructure {
-    pub file: FileInfo,
-    pub format: Option<String>,
-    pub schema: Option<Schema>,
-    pub formatting: Option<Formatting>,
-    pub validation: Option<Validation>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FileInfo {
-    pub location: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Schema {
-    pub r#type: Option<String>,
-    pub properties: Option<HashMap<String, SchemaProperty>>,
-    pub required: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SchemaProperty {
-    pub r#type: Option<String>,
-    pub format: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Formatting {
-    pub indent: Option<usize>,
-    pub sort_keys: Option<bool>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Validation {
-    pub rules: Vec<ValidationRule>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ValidationRule {
-    pub r#type: String,
-    pub field: Option<String>,
-    pub expected_type: Option<String>,
-    pub min: Option<f64>,
-    pub max: Option<f64>,
-    pub allowed_values: Option<Vec<ConfigValue>>,
-    pub pattern: Option<String>,
-    pub message: Option<String>,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_config_value_from_json() {
-        let json = r#"{"key": "value"}"#;
-        let val = ConfigValue::from_json(json).unwrap();
-        assert!(matches!(val, ConfigValue::Object(_)));
-    }
-
-    #[test]
-    fn test_config_value_to_json() {
-        let val = ConfigValue::String("test".to_string());
-        let json = val.to_json().unwrap();
-        assert!(json.contains("test"));
     }
 }

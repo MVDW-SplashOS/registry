@@ -1,6 +1,7 @@
 use crate::decoder::FileTypeDecoder;
-use crate::error::{RegistryError, Result};
+use crate::error::Result;
 use crate::types::{ConfigStructure, ConfigValue};
+use crate::utils::validate_rule as shared_validate_rule;
 use std::collections::HashMap;
 
 pub struct KeyValueDecoder;
@@ -101,7 +102,7 @@ impl FileTypeDecoder for KeyValueDecoder {
 
         if let Some(validation) = &structure.validation {
             for rule in &validation.rules {
-                let rule_errors = validate_rule(data, rule);
+                let rule_errors = shared_validate_rule(data, rule);
                 errors.extend(rule_errors);
             }
         }
@@ -156,94 +157,6 @@ fn value_to_keyvalue_string(value: &ConfigValue) -> String {
             .join(" "),
         ConfigValue::Null => String::new(),
         _ => value.to_string(),
-    }
-}
-
-fn validate_rule(data: &ConfigValue, rule: &crate::types::ValidationRule) -> Vec<String> {
-    let mut errors = Vec::new();
-
-    match rule.r#type.as_str() {
-        "required" => {
-            if let Some(field) = &rule.field {
-                if let ConfigValue::Object(map) = data {
-                    if !map.contains_key(field) {
-                        errors.push(format!("Required field missing: {}", field));
-                    }
-                }
-            }
-        }
-        "type" => {
-            if let (Some(field), Some(expected_type)) = (&rule.field, &rule.expected_type) {
-                if let ConfigValue::Object(map) = data {
-                    if let Some(value) = map.get(field) {
-                        let actual_type = match value {
-                            ConfigValue::String(_) => "string",
-                            ConfigValue::Integer(_) => "integer",
-                            ConfigValue::Float(_) => "number",
-                            ConfigValue::Boolean(_) => "boolean",
-                            ConfigValue::Array(_) => "array",
-                            ConfigValue::Object(_) => "object",
-                            ConfigValue::Null => "null",
-                        };
-                        if !type_matches(actual_type, expected_type) {
-                            errors.push(format!("Field {} must be a {}", field, expected_type));
-                        }
-                    }
-                }
-            }
-        }
-        "enum" => {
-            if let (Some(field), Some(allowed)) = (&rule.field, &rule.allowed_values) {
-                if let ConfigValue::Object(map) = data {
-                    if let Some(value) = map.get(field) {
-                        if let ConfigValue::String(s) = value {
-                            let valid = allowed.iter().any(|av| {
-                                if let ConfigValue::String(av_str) = av {
-                                    s == av_str
-                                } else {
-                                    false
-                                }
-                            });
-                            if !valid {
-                                errors
-                                    .push(format!("Field {} must be one of: {:?}", field, allowed));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        "pattern" => {
-            if let (Some(field), Some(pattern)) = (&rule.field, &rule.pattern) {
-                if let ConfigValue::Object(map) = data {
-                    if let Some(ConfigValue::String(s)) = map.get(field) {
-                        if let Ok(re) = regex::Regex::new(pattern) {
-                            if !re.is_match(s) {
-                                errors.push(format!(
-                                    "Field {} must match pattern: {}",
-                                    field, pattern
-                                ));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        _ => {}
-    }
-
-    errors
-}
-
-fn type_matches(actual: &str, expected: &str) -> bool {
-    match expected {
-        "string" => actual == "string",
-        "number" => actual == "number" || actual == "integer",
-        "integer" => actual == "integer",
-        "boolean" => actual == "boolean",
-        "array" => actual == "array",
-        "object" => actual == "object",
-        _ => true,
     }
 }
 

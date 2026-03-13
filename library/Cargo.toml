@@ -8,7 +8,7 @@ description = "A library to manage system configuration like a registry"
 repository = "https://github.com/MVDW-SplashOS/registry"
 
 [lib]
-name = "libregistry"
+name = "registry"
 crate-type = ["lib", "staticlib", "cdylib"]
 
 [dependencies]

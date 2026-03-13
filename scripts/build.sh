@@ -3,18 +3,18 @@ set -e
 
 echo "Building Registry..."
 
-echo "Building Rust library..."
-cd libregistry-rs
+echo "Building library..."
+cd library
 cargo build --release
 cd ..
 
 echo "Copying library to CLI..."
-mkdir -p registry-zig/lib
-cp libregistry-rs/target/release/libregistry.so registry-zig/lib/
+mkdir -p cli/lib
+cp library/target/release/libregistry.so cli/lib/
 
-echo "Building Zig CLI..."
-cd registry-zig
+echo "Building CLI..."
+cd cli
 zig build
 cd ..
 
-echo "Build complete! Binary at: registry-zig/zig-out/bin/registry"
+echo "Build complete! Binary at: cli/zig-out/bin/registry"

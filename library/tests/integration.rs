@@ -1,15 +1,15 @@
 #[cfg(test)]
 mod tests {
-    use libregistry::decoder;
-    use libregistry::definitions;
-    use libregistry::encoder;
-    use libregistry::types::{ConfigStructure, ConfigValue, FileInfo, Schema};
-    use libregistry::validation;
+    use registry::decoder;
+    use registry::definitions;
+    use registry::encoder;
+    use registry::types::{ConfigStructure, ConfigValue, FileInfo, Schema};
+    use registry::validation;
 
     #[test]
     fn test_load_main_definition() {
         let def = definitions::get_main_definition();
-        assert!(def.categories.len() >= 0);
+        assert!(!def.categories.is_empty());
     }
 
     #[test]
@@ -72,8 +72,8 @@ mod tests {
 
     #[test]
     fn test_session_creation() {
-        let session = libregistry::RegistrySession::new();
-        assert!(session.main_definition.categories.len() >= 0);
+        let session = registry::RegistrySession::new();
+        assert!(!session.main_definition.categories.is_empty());
     }
 
     fn make_file_info() -> FileInfo {
@@ -488,14 +488,14 @@ mod tests {
         let mut properties = std::collections::HashMap::new();
         properties.insert(
             "name".to_string(),
-            libregistry::types::SchemaProperty {
+            registry::types::SchemaProperty {
                 r#type: Some("string".to_string()),
                 format: None,
             },
         );
         properties.insert(
             "version".to_string(),
-            libregistry::types::SchemaProperty {
+            registry::types::SchemaProperty {
                 r#type: Some("string".to_string()),
                 format: None,
             },
@@ -525,14 +525,14 @@ mod tests {
         let mut properties = std::collections::HashMap::new();
         properties.insert(
             "name".to_string(),
-            libregistry::types::SchemaProperty {
+            registry::types::SchemaProperty {
                 r#type: Some("string".to_string()),
                 format: None,
             },
         );
         properties.insert(
             "version".to_string(),
-            libregistry::types::SchemaProperty {
+            registry::types::SchemaProperty {
                 r#type: Some("string".to_string()),
                 format: None,
             },

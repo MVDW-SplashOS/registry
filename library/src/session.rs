@@ -67,6 +67,6 @@ mod tests {
     #[test]
     fn test_session_creation() {
         let session = RegistrySession::new();
-        assert!(session.main_definition.categories.len() >= 0);
+        assert!(!session.main_definition.categories.is_empty());
     }
 }
