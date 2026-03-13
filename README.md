@@ -10,20 +10,41 @@ A centralized system for managing configuration files across a Linux system, sim
 
 Follow these steps to set up your local development environment:
 
-1. Clone the repository:
+### Prerequisites
+
+- **Rust** (for the library): https://rustup.rs/
+- **Zig** 0.15+ (for the CLI): https://ziglang.org/download/
+
+### Build
 
 ```bash
-git clone https://github.com/MVDW-SplashOS/registry.git && cd registry
+./scripts/build.sh
 ```
 
-2. Install development dependencies:
+### Run
 
 ```bash
-pip install -e lib/ && pip install -e cli/
+./registry-zig/zig-out/bin/registry --help
 ```
 
-3. Install definitions
+### Running Tests
 
 ```bash
-python ./scripts/install_definitions.py
+cd libregistry-rs && cargo test --release
+```
+
+## 📦 Installation
+
+```bash
+sudo ./scripts/install.sh
+```
+
+This installs:
+- Binary to `/usr/local/bin/registry`
+- Library to `/usr/local/lib/libregistry.so`
+
+## Usage
+
+```bash
+registry --help
 ```
