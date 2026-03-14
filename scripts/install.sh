@@ -9,7 +9,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "Installing binary..."
-cp -f cli/zig-out/bin/registry /usr/local/bin/
+cp -f cli/zig-out/bin/registry /usr/local/sbin/
 
 echo "Installing library..."
 cp -f library/target/release/libregistry.so /usr/local/lib/

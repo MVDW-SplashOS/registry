@@ -107,46 +107,173 @@ pub extern "C" fn registry_get_completions(prefix: *const c_char) -> *mut c_char
                     if path.is_dir() {
                         if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
                             if !name.starts_with('.') && name != "packages.yaml" {
-                                completions.push(format!("{}/{}", category, name));
+                                // Return just the package name, not full path
+                                completions.push(name.to_string());
                             }
                         }
                     }
                 }
             }
         } else if parts.len() == 2 {
-            // Complete package names for category with filter
+            // Could be either:
+            // 1. Complete package names for category with filter (e.g., "cat/pkg" or "cat/pk")
+            // 2. Complete config names for a package (e.g., "cat/package/")
             let category = parts[0];
             let filter = parts[1];
-            // Read packages from the filesystem and filter by prefix
-            let definitions_dir = definitions::get_definitions_dir();
-            let category_path = Path::new(definitions_dir).join(category);
-            if let Ok(entries) = std::fs::read_dir(&category_path) {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    if path.is_dir() {
-                        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                            if !name.starts_with('.')
-                                && name != "packages.yaml"
-                                && name.starts_with(filter)
-                            {
-                                completions.push(format!("{}/{}", category, name));
+            let main_def = definitions::get_main_definition();
+
+            // Check if filter is a complete package name and prefix ends with /
+            let wants_configs = prefix.ends_with('/');
+
+            if let Some(pkg_def) = definitions::get_package_definition(&main_def, category, filter)
+            {
+                if wants_configs {
+                    // User wants to see configs for this package
+                    for config_name in pkg_def.structure.keys() {
+                        completions.push(config_name.clone());
+                    }
+                } else {
+                    // Filter matches a package exactly but no trailing /, just return it
+                    completions.push(filter.to_string());
+                }
+            } else {
+                // Filter is partial, list matching packages
+                let definitions_dir = definitions::get_definitions_dir();
+                let category_path = Path::new(definitions_dir).join(category);
+                if let Ok(entries) = std::fs::read_dir(&category_path) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if path.is_dir() {
+                            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                                if !name.starts_with('.')
+                                    && name != "packages.yaml"
+                                    && name.starts_with(filter)
+                                {
+                                    // Return just the package name, not full path
+                                    completions.push(name.to_string());
+                                }
                             }
                         }
                     }
                 }
             }
         } else if parts.len() == 3 {
-            // Complete config names for the given category/package
+            // Could be either:
+            // 1. Completing config names for category/package with filter (e.g., "cat/pkg/con")
+            // 2. Completing nested keys for a specific config (e.g., "cat/pkg/config/")
             let category = parts[0];
             let package = parts[1];
+            let filter = parts[2];
             let main_def = definitions::get_main_definition();
             if let Some(pkg_def) = definitions::get_package_definition(&main_def, category, package)
             {
-                for config_name in pkg_def.structure.keys() {
-                    completions.push(format!("{}/{}/{}", category, package, config_name));
+                // Check if filter matches a config name exactly (and prefix ends with /)
+                let exact_match = pkg_def.structure.contains_key(filter);
+                let wants_nested = prefix.ends_with('/');
+
+                if exact_match && wants_nested {
+                    // User wants nested keys for this config
+                    if let Some(struct_file) = pkg_def.structure.get(filter) {
+                        let definitions_dir = definitions::get_definitions_dir();
+                        // Structure files have .yaml extension
+                        let struct_file_yaml = if struct_file.ends_with(".yaml") {
+                            struct_file.clone()
+                        } else {
+                            format!("{}.yaml", struct_file)
+                        };
+                        let struct_path = Path::new(definitions_dir)
+                            .join(category)
+                            .join(package)
+                            .join(struct_file_yaml);
+
+                        if let Ok(content) = std::fs::read_to_string(&struct_path) {
+                            if let Ok(parsed) = serde_yaml::from_str::<serde_yaml::Value>(&content)
+                            {
+                                // Navigate to structures.main.options to get config keys
+                                if let Some(structures) = parsed.get("structures") {
+                                    if let Some(main) = structures.get("main") {
+                                        if let Some(options) = main.get("options") {
+                                            if let Some(options_map) = options.as_mapping() {
+                                                for (key, _) in options_map {
+                                                    if let Some(key_str) = key.as_str() {
+                                                        // Return just the key name
+                                                        completions.push(key_str.to_string());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if completions.is_empty() {
+                        completions.push(prefix.to_string());
+                    }
+                } else {
+                    // Normal config name completion
+                    for config_name in pkg_def.structure.keys() {
+                        if filter.is_empty() || config_name.starts_with(filter) {
+                            // Return just the config name, not full path
+                            completions.push(config_name.clone());
+                        }
+                    }
                 }
             }
-        } else if parts.len() > 2 {
+        } else if parts.len() == 4 {
+            // Complete nested keys: category/package/config/nested_key
+            let category = parts[0];
+            let package = parts[1];
+            let config_name = parts[2];
+            let filter = parts[3];
+
+            let main_def = definitions::get_main_definition();
+            if let Some(pkg_def) = definitions::get_package_definition(&main_def, category, package)
+            {
+                if let Some(struct_file) = pkg_def.structure.get(config_name) {
+                    let definitions_dir = definitions::get_definitions_dir();
+                    // Structure files have .yaml extension
+                    let struct_file_yaml = if struct_file.ends_with(".yaml") {
+                        struct_file.clone()
+                    } else {
+                        format!("{}.yaml", struct_file)
+                    };
+                    let struct_path = Path::new(definitions_dir)
+                        .join(category)
+                        .join(package)
+                        .join(struct_file_yaml);
+
+                    if let Ok(content) = std::fs::read_to_string(&struct_path) {
+                        if let Ok(parsed) = serde_yaml::from_str::<serde_yaml::Value>(&content) {
+                            // Navigate to structures.main.options to get config keys
+                            if let Some(structures) = parsed.get("structures") {
+                                if let Some(main) = structures.get("main") {
+                                    if let Some(options) = main.get("options") {
+                                        if let Some(options_map) = options.as_mapping() {
+                                            for (key, _) in options_map {
+                                                if let Some(key_str) = key.as_str() {
+                                                    if filter.is_empty()
+                                                        || key_str.starts_with(filter)
+                                                    {
+                                                        // Return just the key name
+                                                        completions.push(key_str.to_string());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if completions.is_empty() {
+                completions.push(prefix.to_string());
+            }
+        } else if parts.len() > 4 {
             // Already have full path, return the full path as completion
             completions.push(prefix.to_string());
         }

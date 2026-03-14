@@ -1,5 +1,5 @@
 _registry_completions() {
-    local cur prev cmd path_arg
+    local cur prev cmd
     local cword
 
     cur="${COMP_WORDS[COMP_CWORD]}"
@@ -9,7 +9,6 @@ _registry_completions() {
     local reg_cmd="${COMP_WORDS[0]}"
 
     cmd=""
-    path_arg=""
 
     if [ "$cword" -eq 1 ]; then
         COMPREPLY=($(compgen -W "get set reset apply discard view-changes diff validate validate-config list search info detect backup export import help" -- "$cur"))
@@ -18,44 +17,69 @@ _registry_completions() {
 
     if [ "$cword" -ge 2 ]; then
         cmd="${COMP_WORDS[1]}"
-        if [ "$cword" -ge 3 ]; then
-            path_arg="${COMP_WORDS[2]}"
-        fi
     fi
 
     if [ "$cmd" != "get" ] && [ "$cmd" != "set" ]; then
         return
     fi
 
-    # If prev ends with / (from previous completion), use it as path_arg
-    if [[ "$prev" == */ ]]; then
-        path_arg="$prev"
-        cur=""
+    # Build the full path from all arguments
+    local full_path=""
+    if [ "$cword" -ge 2 ]; then
+        # Include all previous path components (from index 2 onwards)
+        local i
+        for ((i=2; i<COMP_CWORD; i++)); do
+            full_path="${full_path}${COMP_WORDS[i]}"
+        done
+        # Add current word
+        full_path="${full_path}${cur}"
     fi
 
-    # Check if cur contains a / - user is typing category/package/partial
-    if [[ "$cur" == */* ]]; then
-        path_arg="${cur%/*}/"
-        cur="${cur##*/}"
+    # Extract filter (part after last /) and base path
+    local filter=""
+    local base_path=""
+    if [[ "$full_path" == */* ]]; then
+        # Has at least one /, split into base and filter
+        base_path="${full_path%/*}/"
+        filter="${full_path##*/}"
+    else
+        # No /, treat entire thing as filter with empty base
+        base_path=""
+        filter="$full_path"
     fi
 
-    # Check if cur ends with /
-    if [[ "$cur" == */ ]]; then
-        path_arg="$cur"
-        cur=""
-    fi
-
-    # Build command args - only include path_arg if non-empty
-    local cmd_args=("--complete" "--comp-cur" "$cur" "$cmd")
-    if [ -n "$path_arg" ]; then
-        cmd_args+=("$path_arg")
+    # Build command args
+    local cmd_args=("--complete" "--comp-cur" "$filter" "$cmd")
+    if [ -n "$base_path" ]; then
+        cmd_args+=("$base_path")
     fi
 
     local completions
     completions=$("$reg_cmd" "${cmd_args[@]}" 2>/dev/null)
 
     if [ -n "$completions" ]; then
-        COMPREPLY=($(compgen -W "$completions" -- "$cur"))
+        # Count slashes to determine if we're completing directories
+        local slash_count
+        slash_count=$(echo "$base_path" | tr -cd '/' | wc -c)
+
+        # At category level (0 slashes) or package level (1 slash), add trailing /
+        local need_trailing_slash=0
+        if [ "$slash_count" -le 1 ]; then
+            need_trailing_slash=1
+            compopt -o nospace 2>/dev/null
+        fi
+
+        # Prepend base_path to completions and add trailing / for directories
+        local -a full_completions=()
+        for completion in $completions; do
+            local full_completion="${base_path}${completion}"
+            if [ "$need_trailing_slash" -eq 1 ] && [[ "$completion" != */ ]]; then
+                full_completion="${full_completion}/"
+            fi
+            full_completions+=("$full_completion")
+        done
+
+        COMPREPLY=($(compgen -W "${full_completions[*]}" -- "$full_path"))
     fi
 }
 
@@ -63,4 +87,8 @@ complete -F _registry_completions registry
 
 if [ -f /usr/local/bin/registry ]; then
     complete -F _registry_completions /usr/local/bin/registry
+fi
+
+if [ -f /usr/local/sbin/registry ]; then
+    complete -F _registry_completions /usr/local/sbin/registry
 fi
