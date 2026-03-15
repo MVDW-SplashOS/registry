@@ -133,8 +133,8 @@ pub extern "C" fn registry_get_completions(prefix: *const c_char) -> *mut c_char
                         completions.push(config_name.clone());
                     }
                 } else {
-                    // Filter matches a package exactly but no trailing /, just return it
-                    completions.push(filter.to_string());
+                    // Package is complete (exact match with no trailing /)
+                    // Return nothing to indicate completion is done
                 }
             } else {
                 // Filter is partial, list matching packages
@@ -211,6 +211,9 @@ pub extern "C" fn registry_get_completions(prefix: *const c_char) -> *mut c_char
                     if completions.is_empty() {
                         completions.push(prefix.to_string());
                     }
+                } else if exact_match && !wants_nested {
+                    // Path is already complete (exact config match with no trailing /)
+                    // Return nothing to indicate completion is done
                 } else {
                     // Normal config name completion
                     for config_name in pkg_def.structure.keys() {
